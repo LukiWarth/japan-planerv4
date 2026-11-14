@@ -327,12 +327,12 @@ const SPD=85;
 /* ---------- Zustand ---------- */
 const defBk=i=>[{t:'🛏️ Unterkunft',s:1,n:''}].concat(i>0?[{t:'🚆 Anreise zu diesem Ziel',s:1,n:''}]:[]);
 
-let RG=LS.get('jp3-rg',LS.get('jp2-rg','v1'));if(!PRE[RG])RG='v1';
-const KEY=r=>'jp3-'+r;
+let RG=LS.get('jp4-rg',LS.get('jp3-rg','v1'));if(!PRE[RG])RG='v1';
+const KEY=r=>'jp4-'+r;
 function mk(r){const P=PRE[r];return{title:P.t,w:P.w,fl:P.fl,bf:10,start:'2027-03-14',shift:0,stops:P.s.map((x,i)=>{const a=ST[x[0]],n=x[1];return{id:'s'+i,n:x[0],d:n,lat:a[0],lon:a[1],note:a[2],tg:a[3],food:FOOD[x[0]]||'',sp:SPOT[x[0]]||'',pl:[],imgs:[],items:[{g:'U',t:'Doppelzimmer, '+n+' Nächte à '+a[4]+' €',a:n*a[4]},{g:'E',t:n+' Tage × 2 Personen à '+a[5]+' €',a:n*2*a[5]},{g:'A',t:'Aktivitäten und Eintritte',a:a[6]},{g:'R',t:'Anreise vor Ort (Zug, Flug, Transfer)',a:a[7]}]}})}}
-function load(){try{const s=LS.get(KEY(RG),'')||LS.get('jp2-'+RG,'');if(s){const o=JSON.parse(s);if(o&&o.stops)return mig(o)}}catch(e){}return mig(mk(RG))}
+function load(){try{const s=LS.get(KEY(RG),'')||LS.get('jp3-'+RG,'');if(s){const o=JSON.parse(s);if(o&&o.stops)return mig(o)}}catch(e){}return mig(mk(RG))}
 function mig(o){o.start=o.start||'2027-03-14';o.shift=+o.shift||0;if(o.fl==null)o.fl=900;if(o.bf==null)o.bf=10;if(!o.fb)o.fb=[{t:'✈️ Hinflug',s:1,n:''},{t:'✈️ Rückflug',s:1,n:''}];o.stops.forEach((s,i)=>{if(!s.bk)s.bk=defBk(i);s.pl=s.pl||[];s.imgs=s.imgs||[];s.items=s.items||[];s.tg=s.tg||'K';s.food=s.food||'';s.sp=s.sp||'';s.note=s.note||''});return o}
-let S=load(),sel=-1,openS=false,view='home',sub='ov',HITS=[],openPl={},ROADS=LS.get('jp3-roads',LS.get('jp2-roads','1'))!=='0';
+let S=load(),sel=-1,openS=false,view='home',sub='ov',HITS=[],openPl={},ROADS=LS.get('jp4-roads',LS.get('jp3-roads','1'))!=='0';
 let tmr=null;
 let SY=null,DIRTY=false,inPull=false;const save=()=>{if(!inPull){S.ts=Date.now();if(SY)DIRTY=true}if(!LS.set(KEY(RG),JSON.stringify(S)))toast('Speicher voll: bitte weniger oder kleinere Bilder verwenden.');else pushSoon()};
 const saveSoon=()=>{clearTimeout(tmr);tmr=setTimeout(save,300)};
@@ -353,10 +353,10 @@ function bl(i){const s=S.stops[i],w=bw(s);if(!w)return null;const v=visit(i),ov=
 if(!ov)return v[1]<w[0]?{k:'early',e:'⏪',l:'Blüte zu früh dran',t:'Zu früh: Die Blüte beginnt dort laut Näherung um den '+fD(w[0])+', ihr seid '+me+' da.'}:{k:'late',e:'⏩',l:'Blüte eher vorbei',t:'Eher vorbei: Die Blüte dort endet laut Näherung um den '+fD(w[1])+', ihr seid '+me+' da.'};
 return ov/len>=.5?{k:'ok',e:'🌸',l:'Blüte passt',t:'Passt: Blüte dort laut Näherung '+b+', ihr seid '+me+' da.'}:{k:'part',e:'🌱',l:'Blüte teilweise',t:'Teilweise: Blüte dort laut Näherung '+b+', ihr seid '+me+' da.'}}
 /* ---------- Routen ---------- */
-let RTC={},pend={},FAIL={};try{RTC=JSON.parse(LS.get('jp3-routes',LS.get('jp2-routes','{}')))||{}}catch(e){}
+let RTC={},pend={},FAIL={};try{RTC=JSON.parse(LS.get('jp4-routes',LS.get('jp3-routes','{}')))||{}}catch(e){}
 const legKey=(A,B)=>A.lat.toFixed(3)+','+A.lon.toFixed(3)+';'+B.lat.toFixed(3)+','+B.lon.toFixed(3);
 function getLeg(A,B){const k=legKey(A,B);if(RTC[k])return RTC[k];if(pend[k]||FAIL[k]||hav(A,B)>500||typeof fetch!=='function')return null;pend[k]=1;
-fetch('https://router.project-osrm.org/route/v1/driving/'+A.lon+','+A.lat+';'+B.lon+','+B.lat+'?overview=simplified&geometries=geojson').then(r=>r.json()).then(j=>{const g=j&&j.routes&&j.routes[0];if(g&&g.geometry&&g.geometry.coordinates){RTC[k]={c:g.geometry.coordinates.map(p=>[+p[1].toFixed(4),+p[0].toFixed(4)]),d:g.distance,t:g.duration};LS.set('jp3-routes',JSON.stringify(RTC))}}).catch(()=>{FAIL[k]=1}).then(()=>{delete pend[k];if(!RTC[k])FAIL[k]=1;onRoute()});return null}
+fetch('https://router.project-osrm.org/route/v1/driving/'+A.lon+','+A.lat+';'+B.lon+','+B.lat+'?overview=simplified&geometries=geojson').then(r=>r.json()).then(j=>{const g=j&&j.routes&&j.routes[0];if(g&&g.geometry&&g.geometry.coordinates){RTC[k]={c:g.geometry.coordinates.map(p=>[+p[1].toFixed(4),+p[0].toFixed(4)]),d:g.distance,t:g.duration};LS.set('jp4-routes',JSON.stringify(RTC))}}).catch(()=>{FAIL[k]=1}).then(()=>{delete pend[k];if(!RTC[k])FAIL[k]=1;onRoute()});return null}
 function leg(i){const A=S.stops[i-1],B=S.stops[i],d=hav(A,B),fl=d>500,rd=ROADS&&!fl?getLeg(A,B):null;const km=rd?rd.d/1000:(fl?d:d*1.3);return{km,fl,rd,h:rd?rd.t/3600:(fl?d/700+2.5:km/SPD)}}
 const legUrl=(a,b)=>'https://www.google.com/maps/dir/?api=1&origin='+a.lat+','+a.lon+'&destination='+b.lat+','+b.lon+'&travelmode=transit';
 function totalKm(){let k=0;for(let i=1;i<S.stops.length;i++){const A=S.stops[i-1],B=S.stops[i],d=hav(A,B),r=RTC[legKey(A,B)];k+=r&&d<=500?r.d/1000:(d>500?d:d*1.3)}return k}
@@ -432,7 +432,7 @@ function fitAll(){if(!MAP||!S.stops.length)return;const mob=window.innerWidth<=8
 /* ---------- Kopf, Navigation, Sheet ---------- */
 function renderTop(){$('vs').innerHTML=Object.keys(PRE).map(k=>'<button class="vc'+(k===RG?' on':'')+'" data-v2="'+k+'">'+SHORT[k]+'</button>').join('');
  document.querySelectorAll('#bn button').forEach(b=>b.classList.toggle('on',b.dataset.v===view))}
-$('vs').onclick=e=>{const b=e.target.closest('[data-v2]');if(!b||b.dataset.v2===RG)return;save();RG=b.dataset.v2;LS.set('jp3-rg',RG);S=load();syLoad();curDay=null;sel=-1;openS=false;view='route';placingPl=null;render();fitAll()};
+$('vs').onclick=e=>{const b=e.target.closest('[data-v2]');if(!b||b.dataset.v2===RG)return;save();RG=b.dataset.v2;LS.set('jp4-rg',RG);S=load();syLoad();curDay=null;sel=-1;openS=false;view='route';placingPl=null;render();fitAll()};
 $('bn').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;if(b.dataset.v==='route')openS=false;view=b.dataset.v;render();$('pbody').scrollTop=0;if(window.innerWidth<=820&&view!=='route')sheet(view==='cal'&&calMode!=='day'?2:1)};
 let SH=1;const mobile=()=>window.innerWidth<=820;
 function sheet(n){SH=n;if(!mobile()){$('panel').style.height='';return}const H=$('app').offsetHeight;$('panel').style.height=n===0?'150px':n===1?Math.round(H*.5)+'px':(H-12)+'px'}
@@ -546,7 +546,7 @@ function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  case'it-del':s.items.splice(i,1);save();renderPanel();break;
  case'cal-mode':{calMode=d.m;cmpOpen=false;if(calMode==='day'){curDay=null;ensureDay()}else{tlDay=null;actDay=null}render();if(calMode==='day'&&curDay)fitChain(curDay.si,curDay.day);break}
  case'day-go':{curDay={si:+d.si,day:+d.day};ensureDay();render();fitChain(curDay.si,curDay.day);$('pbody').scrollTop=0;break}
- case'cmp-open':{cmpOpen=false;S&&save();RG=d.r;LS.set('jp3-rg',RG);S=load();syLoad();curDay=null;sel=-1;openS=false;view='route';render();fitAll();break}
+ case'cmp-open':{cmpOpen=false;S&&save();RG=d.r;LS.set('jp4-rg',RG);S=load();syLoad();curDay=null;sel=-1;openS=false;view='route';render();fitAll();break}
  case'cmp-back':{cmpOpen=false;view='route';render();break}
  case'cmp':{cmpOpen=true;view='cal';render();$('pbody').scrollTop=0;break}
  case'sy-create':syCreate();break
@@ -554,7 +554,7 @@ function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  case'sy-pull':syPull();break
  case'sy-link':copy(syLink(),'Link kopiert.');break
  case'sy-off':if(confirm('Verbindung trennen? Der Plan bleibt auf diesem Gerät, wird aber nicht mehr abgeglichen.')){SY=null;LS.set(SYK(),'null');renderPanel()}break
- case'pl-view':plView=d.v;LS.set('jp3-plv',plView);renderPanel();break
+ case'pl-view':plView=d.v;LS.set('jp4-plv',plView);renderPanel();break
  case'lb':{const q=+d.pi<0?stopPhotos(+d.si)[+d.k]:phList(S.stops[+d.si].pl[+d.pi])[+d.k];showLb(q);break}
  case'ph-del':{const x=s.pl[i];x.imgs.splice(+d.k,1);save();renderPanel();break}
  case'ph-find':{const x=s.pl[i];toast('Suche Fotos …');phPlace(s,x,true);break}
@@ -607,17 +607,17 @@ function field(t){const f=t.dataset.f,s=S.stops[sel],i=+t.dataset.i;if(f==='syau
  case'bkn':{if(t.dataset.g==='fb')S.fb[i].n=t.value;else if(t.dataset.g==='sb')S.stops[+t.dataset.si].bk[i].n=t.value;else S.stops[+t.dataset.si].pl[i].bn=t.value;saveSoon();break}
  case'pbk':s.pl[i].bk=+t.value;save();render();break;
  case'pbn':s.pl[i].bn=t.value;saveSoon();break;
- case'roads':ROADS=t.checked;LS.set('jp3-roads',ROADS?'1':'0');$('zd').className=ROADS?'on':'';drawMap();break;
+ case'roads':ROADS=t.checked;LS.set('jp4-roads',ROADS?'1':'0');$('zd').className=ROADS?'on':'';drawMap();break;
  }}
 $('pbody').oninput=e=>{const t=e.target;if(t.id==='sq'||t.id==='q'){clearTimeout(t._t);t._t=setTimeout(()=>doSearch(t.id==='q'?'place':'stop',t.value,t.id==='q'?'qres':'sres'),900);return}if(t.dataset.f&&t.tagName!=='SELECT'&&t.type!=='checkbox'&&t.dataset.f!=='shift'&&t.dataset.f!=='start'&&t.type!=='time')field(t)};
 $('pbody').onchange=e=>{const t=e.target;if(t.id==='fi'){addImgs(t.files);t.value='';return}if(t.dataset.f==='pfile'){addOwn(t.files,S.stops[sel].pl[+t.dataset.i]);t.value='';return}if(t.id==='fj'){importFile(t.files[0]);t.value='';return}if(t.dataset.f&&(t.tagName==='SELECT'||t.type==='checkbox'||t.type==='number'||t.type==='date'||t.type==='time'))field(t)};
 $('pbody').onkeydown=e=>{if(e.key==='Enter'&&(e.target.id==='q'||e.target.id==='sq')){e.preventDefault();clearTimeout(e.target._t);doSearch(e.target.id==='q'?'place':'stop',e.target.value,e.target.id==='q'?'qres':'sres')}};
 function addImgs(files){const s=S.stops[sel];if(!s||!files)return;let n=0;const list=[...files];list.forEach(f=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,800/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);s.imgs.push(c.toDataURL('image/jpeg',.72));if(++n===list.length){save();render()}};im.onerror=()=>{if(++n===list.length){save();render()}};im.src=r.result};r.readAsDataURL(f)})}
-function importFile(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.s||!o.s.stops)throw 0;if(!confirm('Plan aus Datei laden? Der aktuelle Plan dieser Variante wird ersetzt.'))return;RG=PRE[o.rg]?o.rg:RG;LS.set('jp3-rg',RG);S=mig(o.s);sel=-1;openS=false;save();render();fitAll();toast('Plan geladen.')}catch(e){toast('Datei nicht lesbar.')}};r.readAsText(f)}
+function importFile(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.s||!o.s.stops)throw 0;if(!confirm('Plan aus Datei laden? Der aktuelle Plan dieser Variante wird ersetzt.'))return;RG=PRE[o.rg]?o.rg:RG;LS.set('jp4-rg',RG);S=mig(o.s);sel=-1;openS=false;save();render();fitAll();toast('Plan geladen.')}catch(e){toast('Datei nicht lesbar.')}};r.readAsText(f)}
 /* Karten-Knöpfe */
 $('zi').onclick=()=>MAP&&MAP.zoomIn();$('zo').onclick=()=>MAP&&MAP.zoomOut();$('zr').onclick=fitAll;$('zl').onclick=()=>MAP&&MAP.locate({setView:true,maxZoom:14});
 $('zs').onclick=()=>{if(!MAP)return;SATON=!SATON;if(SATON){MAP.removeLayer(TL_DE);MAP.removeLayer(TL_OSM);TL_SAT.addTo(MAP)}else{MAP.removeLayer(TL_SAT);TL_DE.addTo(MAP)}$('zs').className=SATON?'on':''};
-$('zd').className=ROADS?'on':'';$('zd').onclick=()=>{ROADS=!ROADS;LS.set('jp3-roads',ROADS?'1':'0');$('zd').className=ROADS?'on':'';toast(ROADS?'Straßenrouten an (Auto, bis 500 km).':'Straßenrouten aus, nur Luftlinie.');drawMap();renderPanel()};
+$('zd').className=ROADS?'on':'';$('zd').onclick=()=>{ROADS=!ROADS;LS.set('jp4-roads',ROADS?'1':'0');$('zd').className=ROADS?'on':'';toast(ROADS?'Straßenrouten an (Auto, bis 500 km).':'Straßenrouten aus, nur Luftlinie.');drawMap();renderPanel()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&placingPl){placingPl=null;$('lmap').style.cursor=''}});
 /* ---------- Plan: Kalender, Tagesplan, Kettenroute ---------- */
 let calEd=null,actDay=null,tlDay=null;
@@ -777,7 +777,7 @@ function saveDocFile(){const html='<!doctype html><html lang="de"><head><meta ch
 $('doc').onclick=e=>{const b=e.target.closest('[data-d]');if(!b)return;const a=b.dataset.d;if(a==='close')$('doc').classList.remove('on');else if(a==='print')window.print();else if(a==='save')saveDocFile()};
 
 /* ---------- v3 Teil 2: Tagesansicht, Filter, Fotos, Vergleich, Sync ---------- */
-let calMode='day',curDay=null,plView=LS.get('jp3-plv','cards');
+let calMode='day',curDay=null,plView=LS.get('jp4-plv','cards');
 const dayList=()=>{const r=[];S.stops.forEach((s,si)=>{for(let d=0;d<nd(s);d++)r.push({si,day:d,n:visit(si)[0]+d})});return r};
 function ensureDay(){if(!S.stops.length)return;if(!curDay||!S.stops[curDay.si]||curDay.day>=nd(S.stops[curDay.si])||curDay.day<0){const r=nextDayRef();curDay={si:r.si,day:r.day}}tlDay={si:curDay.si,day:curDay.day};actDay={si:curDay.si,day:curDay.day};sel=curDay.si}
 function fitChain(si,dy){if(!MAP)return;const c=chainPts(si,dy),pts=c.pts.map(ll);try{MAP.fitBounds(pts,{paddingTopLeft:[40,70],paddingBottomRight:[40,(mobile()?$('panel').offsetHeight:0)+40],maxZoom:15})}catch(e){}}
@@ -788,8 +788,8 @@ function vDay(){if(!S.stops.length)return'<h2>Tag</h2><p class="mut">Noch keine 
  const pool=poolItems(c.si).filter(k=>s.pl[k].ty!=='H');h+='<div class="day"><div class="dhd"><b>Noch ohne Tag</b><span class="mut sm">'+pool.length+' · auf die Zeitachse ziehen</span></div><div class="dz" data-si="'+c.si+'" data-day="">'+(pool.length?pool.map(k=>chipHtml(c.si,k,0,calEd)).join(''):'<span class="mut sm">'+(s.pl.length?'Alles eingeplant.':'Noch keine Orte. Im Reiter Reise unter „Orte“ suchen.')+'</span>')+'</div></div>';
  h+=dayCard(c.si,c.day)+'<div class="row" style="justify-content:space-between;margin:6px 0 14px">'+(pv?'<button class="btn" data-a="day-go" data-si="'+pv.si+'" data-day="'+pv.day+'">◀ '+dstr(pv.n)+'</button>':'<span></span>')+(nx?'<button class="btn" data-a="day-go" data-si="'+nx.si+'" data-day="'+nx.day+'">'+dstr(nx.n)+' ▶</button>':'')+'</div>';return h}
 /* Filter */
-let HID={},ONLYDAY=false;try{const f=JSON.parse(LS.get('jp3-flt','{}'));HID=f.h||{};ONLYDAY=!!f.o}catch(e){}
-const saveFlt=()=>LS.set('jp3-flt',JSON.stringify({h:HID,o:ONLYDAY}));
+let HID={},ONLYDAY=false;try{const f=JSON.parse(LS.get('jp4-flt','{}'));HID=f.h||{};ONLYDAY=!!f.o}catch(e){}
+const saveFlt=()=>LS.set('jp4-flt',JSON.stringify({h:HID,o:ONLYDAY}));
 function renderFlt(){const cnt={};S.stops.forEach(s=>s.pl.forEach(x=>{if(x.lat!=null)cnt[x.ty]=(cnt[x.ty]||0)+1}));let h='<b style="font-size:.85rem">Auf der Karte zeigen</b><div class="chips" style="margin-top:6px">'+PT.map(t=>cnt[t[0]]?'<button class="fchip'+(HID[t[0]]?'':' on')+'" data-t="'+t[0]+'">'+t[1]+' '+t[2]+' <small>'+cnt[t[0]]+'</small></button>':'').join('')+'</div>';
  h+='<label class="row sm" style="margin-top:8px"><input type="checkbox" id="fod"'+(ONLYDAY?' checked':'')+' style="width:auto"> Nur Orte des gewählten Tages</label><div class="row" style="margin-top:6px"><button class="btn sm2" id="fall">Alle zeigen</button></div>';$('mfp').innerHTML=h;$('zf').classList.toggle('on',Object.keys(HID).some(k=>HID[k])||ONLYDAY)}
 $('zf').onclick=()=>{renderFlt();$('mfp').classList.toggle('on')};
@@ -799,7 +799,7 @@ $('mfp').onchange=e=>{if(e.target.id==='fod'){ONLYDAY=e.target.checked;saveFlt()
 function stopPhotos(si){const s=S.stops[si],r=[];(s.imgs||[]).forEach((u,k)=>r.push({u,own:1,si,pi:-1,k}));(s.ph||[]).forEach((q,j)=>r.push({u:q.u,si,pi:-1,k:0}));s.pl.forEach((x,pi)=>{const l=phList(x);if(l[0])r.push({u:l[0].u,si,pi,k:0})});return r}
 function impHtml(si){const l=stopPhotos(si).slice(0,9);if(!l.length)return'';return'<h3>📷 Impressionen</h3><div class="imp">'+l.map((q,n)=>'<img src="'+esc(q.u)+'" alt="" loading="lazy" data-a="lb" data-si="'+q.si+'" data-pi="-1" data-k="'+n+'">').join('')+'</div>'}
 /* Vergleich */
-function statsFor(r){const old=S;try{if(r!==RG){let o=null;try{const t=LS.get(KEY(r),'')||LS.get('jp2-'+r,'');if(t){const j=JSON.parse(t);if(j&&j.stops)o=mig(j)}}catch(e){}S=o||mig(mk(r))}
+function statsFor(r){const old=S;try{if(r!==RG){let o=null;try{const t=LS.get(KEY(r),'')||LS.get('jp3-'+r,'');if(t){const j=JSON.parse(t);if(j&&j.stops)o=mig(j)}}catch(e){}S=o||mig(mk(r))}
  const v=S.stops,c=cats();let km=0,fl=0;for(let i=1;i<v.length;i++){const d=hav(v[i-1],v[i]),q=RTC[legKey(v[i-1],v[i])];if(d>500)fl++;km+=q&&d<=500?q.d/1000:(d>500?d:d*1.3)}
  let ok=0,wn=0;v.forEach((s,i)=>{const b=bl(i);if(b){wn++;if(b.k==='ok')ok++}});const tc=k=>v.filter(s=>(s.tg||'').includes(k)).length;
  return{r,t:S.title,n:v.length,d:days(),cost:grand(),km,fl,ok,wn,tags:{N:tc('N'),E:tc('E'),K:tc('K'),S:tc('S'),B:tc('B'),R:tc('R')},names:v.map(s=>s.n.split(' &')[0]).join(' → ')}}finally{S=old}}
@@ -811,7 +811,7 @@ function vCmp(){const rs=Object.keys(PRE).map(statsFor),best=(f,mx)=>{const vals
  '<tr><th></th>'+rs.map(x=>'<td>'+(x.r===RG?'<span class="badge ok">aktiv</span>':'<button class="btn sm2" data-a="cmp-open" data-r="'+x.r+'">Öffnen</button>')+'</td>').join('')+'</tr></table></div><p class="mut sm">Grün: bester Wert in der Zeile (günstigste Kosten, kürzeste Strecke, meiste Blüte-Treffer). Eure Änderungen sind eingerechnet. Alle Zahlen sind Schätzungen.</p>';return h}
 /* Gemeinsam planen (jsonblob.com) */
 const JB='https://jsonblob.com/api/jsonBlob',JH={'Content-Type':'application/json','Accept':'application/json'};
-const SYK=()=>'jp3-sync-'+RG;
+const SYK=()=>'jp4-sync-'+RG;
 function syLoad(){try{SY=JSON.parse(LS.get(SYK(),'null'))}catch(e){SY=null}}
 function sySave(){LS.set(SYK(),JSON.stringify(SY))}
 function syStrip(){const o=JSON.parse(JSON.stringify(S));o.stops.forEach(s=>{s.imgs=[];delete s.ph;s.pl.forEach(x=>{x.imgs=[];delete x.ph;delete x.info})});return o}
@@ -823,7 +823,7 @@ function syApply(rem){inPull=true;try{S=mig(syMerge(rem.s));S.ts=rem.ts;LS.set(K
 async function syPull(silent){if(!SY)return;try{const r=await fetch(JB+'/'+SY.id,{headers:{'Accept':'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);const rem=await r.json();if(!rem||!rem.s||!rem.s.stops)throw new Error('Unerwartete Antwort');
  if(rem.ts>(SY.rts||0)){if(!DIRTY){syApply(rem);if(!silent||true)toast('Neuer Stand von deiner Reisepartnerin geladen.')}else if(confirm('Ihr habt beide geändert.\n\nOK = meinen Stand behalten und hochladen\nAbbrechen = den neuen Stand laden (meine letzten Änderungen gehen verloren)'))syPush();else syApply(rem)}else if(!silent)toast('Schon auf dem neuesten Stand.')}catch(e){if(!silent)toast('Abholen fehlgeschlagen: '+e.message)}}
 let pTmr=null;function pushSoon(){if(!SY||SY.auto===false)return;clearTimeout(pTmr);pTmr=setTimeout(()=>syPush(true),4000)}
-async function syJoin(id,rg){try{const r=await fetch(JB+'/'+id,{headers:{'Accept':'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);const rem=await r.json();if(!rem||!rem.s||!rem.s.stops)throw new Error('Unerwartete Antwort');RG=PRE[rem.rg||rg]?(rem.rg||rg):RG;LS.set('jp3-rg',RG);S=mig(rem.s);S.ts=rem.ts;inPull=true;LS.set(KEY(RG),JSON.stringify(S));inPull=false;SY={id,rts:rem.ts,last:Date.now(),auto:true};sySave();DIRTY=false;curDay=null;sel=-1;openS=false;view='home';render();fitAll();toast('Gemeinsamer Plan geladen. Änderungen werden automatisch geteilt.')}catch(e){toast('Gemeinsamer Plan konnte nicht geladen werden: '+e.message)}}
+async function syJoin(id,rg){try{const r=await fetch(JB+'/'+id,{headers:{'Accept':'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);const rem=await r.json();if(!rem||!rem.s||!rem.s.stops)throw new Error('Unerwartete Antwort');RG=PRE[rem.rg||rg]?(rem.rg||rg):RG;LS.set('jp4-rg',RG);S=mig(rem.s);S.ts=rem.ts;inPull=true;LS.set(KEY(RG),JSON.stringify(S));inPull=false;SY={id,rts:rem.ts,last:Date.now(),auto:true};sySave();DIRTY=false;curDay=null;sel=-1;openS=false;view='home';render();fitAll();toast('Gemeinsamer Plan geladen. Änderungen werden automatisch geteilt.')}catch(e){toast('Gemeinsamer Plan konnte nicht geladen werden: '+e.message)}}
 function syCard(){const t=SY&&SY.last?new Date(SY.last).toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit'}):'';
  return'<div class="card"><h3 style="margin-top:0">👫 Gemeinsam planen</h3>'+(!SY?'<p class="sm" style="margin:0 0 8px">Erstellt einen gemeinsamen Plan: ihr beide öffnet denselben Link, Änderungen gleichen sich automatisch ab. Fotos bleiben auf dem jeweiligen Gerät.</p><button class="btn pri" data-a="sy-create">Gemeinsamen Plan erstellen</button><p class="mut sm">Hinweis: Der Plan liegt auf dem kostenlosen Dienst jsonblob.com. Jeder, der den Link kennt, kann ihn lesen und ändern. Gebt ihn nur an die Person weiter, mit der ihr plant.</p>':
  '<p class="sm" style="margin:0 0 8px">✅ Verbunden für diese Variante. '+(t?'Zuletzt abgeglichen um '+t+'.':'')+(DIRTY?' <b>Ungesicherte Änderungen.</b>':'')+'</p><div class="row"><button class="btn" data-a="sy-push">⬆️ Hochladen</button><button class="btn" data-a="sy-pull">⬇️ Neuen Stand holen</button><button class="btn" data-a="sy-link">🔗 Link kopieren</button></div><label class="row sm" style="margin-top:8px"><input type="checkbox" data-f="syauto"'+(SY.auto!==false?' checked':'')+' style="width:auto"> Änderungen automatisch hochladen und regelmäßig abholen</label><div class="row" style="margin-top:6px"><button class="btn sm2" data-a="sy-off">Verbindung trennen</button></div><p class="mut sm">Haben beide gleichzeitig geändert, fragt die App, welcher Stand gelten soll. Die Variante ist gemeinsam, andere Varianten bleiben lokal.</p>')+'</div>'}
@@ -832,7 +832,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 let cmpOpen=false;
 /* Start */
-(function(){const m=/[#&]p=([^&]+)/.exec(location.hash);if(m){try{const o=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));if(o.s&&o.s.stops&&confirm('Geteilten Plan laden? Euer Stand in dieser Variante wird ersetzt.')){RG=PRE[o.rg]?o.rg:RG;LS.set('jp3-rg',RG);S=mig(o.s);save()}}catch(e){}history.replaceState(null,'',location.pathname)}})();
+(function(){const m=/[#&]p=([^&]+)/.exec(location.hash);if(m){try{const o=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));if(o.s&&o.s.stops&&confirm('Geteilten Plan laden? Euer Stand in dieser Variante wird ersetzt.')){RG=PRE[o.rg]?o.rg:RG;LS.set('jp4-rg',RG);S=mig(o.s);save()}}catch(e){}history.replaceState(null,'',location.pathname)}})();
 syLoad();(function(){const m=/[#&]j=([^&~]+)(?:~(v\d))?/.exec(location.hash);if(m){history.replaceState(null,'',location.pathname);window.__join=[m[1],m[2]]}})();
 initMap();sheet(1);render();fitAll();phAll();renderFlt();if(window.__join)syJoin(window.__join[0],window.__join[1]);else if(SY)syPull(true);
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
