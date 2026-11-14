@@ -246,6 +246,7 @@ table.cmp{border-collapse:collapse;width:100%;min-width:560px;font-size:.82rem}t
 .vrate{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 0}.vr{display:flex;align-items:center;gap:6px;font-size:.82rem;background:var(--soft);border-radius:12px;padding:4px 8px}.vr input{width:62px;padding:5px 6px;text-align:center}.vr.c{box-shadow:inset 3px 0 0 #d6336c}.vr.l{box-shadow:inset 3px 0 0 #1c7ed6}.vavg{font-weight:800;color:var(--ok)}
 .xh{color:var(--mut)}.xrow input:disabled{opacity:.6}
 textarea.auto-ta{display:block;width:100%;resize:none;overflow:hidden;border-radius:10px;border:1px solid var(--soft);background:var(--card);color:var(--ink);padding:8px 10px;font:inherit;line-height:1.45;min-height:60px}
+.pfl{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:#6b3fa0;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none;opacity:.9}#zg.on{background:#6b3fa0;color:#fff}
 .xd{width:26px;height:26px;border-radius:50%;background:#ffe600;border:3px solid #000;box-shadow:0 0 0 2px #fff,0 2px 6px #0007}.xl{position:absolute;left:32px;top:2px;font-size:13px;font-weight:700;white-space:nowrap;color:#000;text-shadow:0 0 3px #fff,0 0 3px #fff}
 .kw.dur{background:#8a3fc722;color:#6d2fa0}.durrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.durrow input{width:80px;display:inline-block}
 .vboth{font-weight:800;font-size:.8rem;color:var(--ok)}
@@ -255,7 +256,7 @@ textarea.auto-ta{display:block;width:100%;resize:none;overflow:hidden;border-rad
 <header id="top"><div id="brand">🌸 <span>Japan <i>2027</i></span></div><div id="vs"></div></header>
 <div id="app">
  <section id="mapwrap"><div id="lmap"></div><div id="rstat"></div><div id="dayfl"><span id="dayt"></span><button id="dayx" title="Tagesroute ausblenden">✕</button></div>
-  <div id="mc"><button id="zi" title="Vergrößern">＋</button><button id="zo" title="Verkleinern">−</button><button id="zr" title="Ganze Reise zeigen">⟲</button><button id="zs" title="Satellit ein/aus">🛰️</button><button id="zd" title="Straßenrouten ein/aus">🛣️</button><button id="zf" title="Karte filtern">🔍</button><button id="zl" title="Mein Standort">📡</button></div><div id="mfp"></div></section>
+  <div id="mc"><button id="zi" title="Vergrößern">＋</button><button id="zo" title="Verkleinern">−</button><button id="zr" title="Ganze Reise zeigen">⟲</button><button id="zs" title="Satellit ein/aus">🛰️</button><button id="zd" title="Straßenrouten ein/aus">🛣️</button><button id="zg" title="Präfektur-Grenzen ein/aus">🗾</button><button id="zf" title="Karte filtern">🔍</button><button id="zl" title="Mein Standort">📡</button></div><div id="mfp"></div></section>
  <aside id="panel"><div id="handle"><i></i></div><div id="pbody"></div>
   <nav id="bn"><button data-v="home"><b>🏠</b>Start</button><button data-v="route"><b>🗺️</b>Reise</button><button data-v="cal"><b>📅</b>Tag</button><button data-v="budget"><b>💶</b>Budget</button><button data-v="bloom"><b>🌸</b>Blüte</button><button data-v="more"><b>⚙️</b>Mehr</button></nav></aside>
 </div>
@@ -426,7 +427,7 @@ res.forEach((o,k)=>{const ty=guessTy(o),og=origName(o),a=areaOf(o);h+='<div clas
 if(kind==='place')h+='<button class="btn sm2" data-a="hit-manual" data-q="'+esc(q)+'" style="margin-top:6px">Trotzdem ohne Treffer hinzufügen</button>';box.innerHTML=h})}
 function autoGeo(t,x){nom(x.n+' '+t.n.split(' &')[0]+' Japan',t,5,(err,res)=>{if(err||!res||!res.length)return;const r=res.filter(o=>hav(t,{lat:+o.lat,lon:+o.lon})<80)[0];if(!r)return;x.lat=Math.round(+r.lat*1e5)/1e5;x.lon=Math.round(+r.lon*1e5)/1e5;x.info=extractInfo(r);save();phPlace(t,x);if(S.stops[sel]===t){render()}toast('„'+x.n+'“ auf der Karte gesetzt.')})}
 /* ---------- Karte ---------- */
-let MAP=null,LAYER=null,GPS=null,TL_DE,TL_OSM,TL_SAT,SATON=false,placingPl=null;
+let MAP=null,PREFG=null,PLAB=null,PGEO=null,BORD=LS.get('jp4-bord','1')!=='0',LAYER=null,GPS=null,TL_DE,TL_OSM,TL_SAT,SATON=false,placingPl=null;
 function initMap(){
  if(typeof L==='undefined'){$('lmap').innerHTML='<p class="mut" style="padding:70px 16px">Die Kartenbibliothek konnte nicht geladen werden (keine Internetverbindung?). Reiseplan, Kosten und Blüte funktionieren trotzdem.</p>';return}
  MAP=L.map('lmap',{zoomControl:false,worldCopyJump:true,preferCanvas:true}).setView([36,136],5);
@@ -434,7 +435,8 @@ function initMap(){
  TL_DE=L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap, OSM Deutschland'}).addTo(MAP);
  let er=0;TL_DE.on('tileerror',()=>{er++;if(er===4&&!SATON){MAP.removeLayer(TL_DE);TL_OSM.addTo(MAP);toast('Deutsche Karte nicht erreichbar, internationale aktiv (Namen evtl. japanisch).')}});
  TL_SAT=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Esri'});
- LAYER=L.layerGroup().addTo(MAP);
+ PREFG=L.layerGroup().addTo(MAP);PLAB=L.layerGroup().addTo(MAP);LAYER=L.layerGroup().addTo(MAP);
+ MAP.on('zoomend',prefLabels);loadPref();
  MAP.on('zoomend',drawMap);
  MAP.on('click',e=>{if(placingPl){const p=S.stops[placingPl.si].pl[placingPl.pi];if(p){p.lat=Math.round(e.latlng.lat*1e5)/1e5;p.lon=Math.round(e.latlng.lng*1e5)/1e5;toast('„'+p.n+'“ auf der Karte gesetzt.');save()}placingPl=null;$('lmap').style.cursor='';if(mobile())sheet(1);render()}});
  MAP.on('locationfound',e=>{if(GPS)GPS.remove();GPS=L.circleMarker(e.latlng,{radius:8,color:'#1e6fd9'}).addTo(MAP)});
@@ -443,6 +445,10 @@ function initMap(){
 }
 const ll=s=>[s.lat,s.lon];
 const baseOf=s=>(s.pl||[]).find(x=>x.base&&x.lat!=null)||(s.pl||[]).find(x=>x.ty==='H'&&x.lat!=null);
+function prefCenter(g){let best=null,ba=-1;const polys=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];polys.forEach(p=>{let a=1e9,b=1e9,c=-1e9,d=-1e9;p[0].forEach(q=>{a=Math.min(a,q[0]);c=Math.max(c,q[0]);b=Math.min(b,q[1]);d=Math.max(d,q[1])});const ar=(c-a)*(d-b);if(ar>ba){ba=ar;best=[(b+d)/2,(a+c)/2]}});return best}
+function drawPref(){if(!MAP||!PREFG)return;PREFG.clearLayers();if(BORD&&PGEO){try{L.geoJSON(PGEO,{style:{color:'#6b3fa0',weight:1.6,opacity:.75,fillOpacity:0,dashArray:'5 4'},interactive:false}).addTo(PREFG)}catch(e){}}prefLabels()}
+function prefLabels(){if(!MAP||!PLAB)return;PLAB.clearLayers();if(!BORD||!PGEO||MAP.getZoom()<6)return;PGEO.features.forEach(f=>{const c=prefCenter(f.geometry),n=f.properties&&(f.properties.nam||f.properties.name);if(!c||!n)return;L.marker(c,{icon:L.divIcon({className:'',html:'<span class="pfl">'+esc(n)+'</span>',iconSize:[0,0]}),interactive:false,keyboard:false}).addTo(PLAB)})}
+async function loadPref(){if(PGEO){drawPref();return}try{const r=await fetch('https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson',{cache:'force-cache'});if(!r.ok)throw 0;PGEO=await r.json()}catch(e){PGEO=null}drawPref()}
 function drawMap(){
  if(!MAP)return;LAYER.clearLayers();const v=S.stops,z=MAP.getZoom();
  for(let i=1;i<v.length;i++){const A=v[i-1],B=v[i],l=leg(i);
@@ -706,6 +712,7 @@ function importFile(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{c
 /* Karten-Knöpfe */
 $('zi').onclick=()=>MAP&&MAP.zoomIn();$('zo').onclick=()=>MAP&&MAP.zoomOut();$('zr').onclick=fitAll;$('zl').onclick=()=>MAP&&MAP.locate({setView:true,maxZoom:14});
 $('zs').onclick=()=>{if(!MAP)return;SATON=!SATON;if(SATON){MAP.removeLayer(TL_DE);MAP.removeLayer(TL_OSM);TL_SAT.addTo(MAP)}else{MAP.removeLayer(TL_SAT);TL_DE.addTo(MAP)}$('zs').className=SATON?'on':''};
+$('zg').className=BORD?'on':'';$('zg').onclick=()=>{BORD=!BORD;LS.set('jp4-bord',BORD?'1':'0');$('zg').className=BORD?'on':'';toast(BORD?'Präfektur-Grenzen an.':'Präfektur-Grenzen aus.');if(BORD&&!PGEO){loadPref().then(()=>{if(!PGEO)toast('Grenzen konnten nicht geladen werden (Internet?).')})}else drawPref()};
 $('zd').className=ROADS?'on':'';$('zd').onclick=()=>{ROADS=!ROADS;LS.set('jp4-roads',ROADS?'1':'0');$('zd').className=ROADS?'on':'';toast(ROADS?'Straßenrouten an (Auto, bis 500 km).':'Straßenrouten aus, nur Luftlinie.');drawMap();renderPanel()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&placingPl){placingPl=null;$('lmap').style.cursor=''}});
 /* ---------- Plan: Kalender, Tagesplan, Kettenroute ---------- */
