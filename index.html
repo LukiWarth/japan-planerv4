@@ -59,6 +59,7 @@ a{color:var(--acc)}
 .mk b{position:absolute;top:-9px;right:-9px;min-width:19px;height:19px;padding:0 4px;border-radius:99px;background:#23284a;color:#fff;font-size:11px;display:grid;place-items:center;border:2px solid #fff}
 .mkl{position:absolute;top:40px;left:50%;transform:translateX(-50%);white-space:nowrap;font:700 12px system-ui;color:#23284a;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff,0 0 5px #fff;pointer-events:none}
 .pp{width:28px;height:28px;border-radius:50%;background:#fff;border:2.5px solid var(--c,#1c8fb5);display:grid;place-items:center;font-size:14px;box-shadow:0 2px 6px #0005;position:relative}
+.vm{position:absolute;top:5px;width:17px;height:17px;border-radius:50%;color:#fff;font-size:10px;font-weight:800;line-height:17px;text-align:center;border:1.5px solid #fff;box-shadow:0 1px 3px #0006}.vm.vc{left:-19px;background:#d6336c}.vm.vl{right:-19px;background:#1c7ed6}
 .pp.dn{opacity:.5;filter:grayscale(.8)}
 .pp.hb{border-color:var(--blue);box-shadow:0 0 0 3px #1e6fd955,0 2px 6px #0005}
 .rl{display:inline-block;transform:translate(-50%,-50%);white-space:nowrap;font:700 11.5px system-ui;background:#fffe;color:#23284a;border-radius:99px;padding:2px 8px;box-shadow:0 1px 5px #0004;pointer-events:none}
@@ -426,7 +427,7 @@ function drawMap(){
   c.its.forEach((x,j)=>L.marker([x.lat,x.lon],{icon:L.divIcon({className:'mkw',html:'<div class="cn">'+(j+1)+'</div>',iconSize:[20,20],iconAnchor:[-4,24]}),interactive:false,keyboard:false,zIndexOffset:900}).addTo(LAYER));
   if(c.hasBase)L.marker([c.base.lat,c.base.lon],{icon:L.divIcon({className:'mkw',html:'<div class="pp hb" style="--c:#8a3fc7">🛏️</div>',iconSize:[28,28],iconAnchor:[14,14]}),interactive:false,keyboard:false,zIndexOffset:800}).addTo(LAYER)}
  if(z>=9||actDay)v.forEach((s,si)=>(s.pl||[]).forEach((x,pi)=>{if(x.lat==null||x.lon==null)return;if(HID[x.ty]&&x.ty!=='H'||HID[x.ty]&&x.ty==='H')return;if(ONLYDAY&&actDay&&(si!==actDay.si||dayOf(s,x)!==actDay.day))return;if(actDay&&(si!==actDay.si||dayOf(s,x)!==actDay.day)&&z<9)return;
-  const m=L.marker([x.lat,x.lon],{icon:L.divIcon({className:'mkw',html:'<div class="pp'+(x.ok?' dn':'')+(x===hot?' hb':'')+'" style="--c:'+tg0(s)[2]+'">'+PI(x.ty)+'</div>'+(z>=12?'<span class="mkl" style="top:30px">'+esc(x.n)+'</span>':''),iconSize:[28,28],iconAnchor:[14,14]}),draggable:si===sel&&openS,zIndexOffset:500,title:x.n}).addTo(LAYER);
+  const m=L.marker([x.lat,x.lon],{icon:L.divIcon({className:'mkw',html:'<div class="pp'+(x.ok?' dn':'')+(x===hot?' hb':'')+'" style="--c:'+tg0(s)[2]+'">'+PI(x.ty)+(x.ty==='S'&&x.vt&&x.vt.c?'<span class="vm vc" title="Carmen: will ich machen">C</span>':'')+(x.ty==='S'&&x.vt&&x.vt.l?'<span class="vm vl" title="Lukas: will ich machen">L</span>':'')+'</div>'+(z>=12?'<span class="mkl" style="top:30px">'+esc(x.n)+'</span>':''),iconSize:[28,28],iconAnchor:[14,14]}),draggable:si===sel&&openS,zIndexOffset:500,title:x.n}).addTo(LAYER);
   m.on('click',()=>{if(tlDay&&tlDay.si===si&&dayOf(s,x)!==tlDay.day){x.day=tlDay.day;x.ord=1e6;normDay(si,tlDay.day);save();toast('„'+x.n+'“ zu '+dstr(visit(si)[0]+tlDay.day)+' hinzugefügt. Ziehen auf die Zeitachse legt die Uhrzeit fest.');renderPanel();drawMap();return}window.openPlace(si,pi)});
   const el=m.getElement&&m.getElement();if(el&&tlDay&&tlDay.si===si&&!mobile())el.addEventListener('pointerdown',ev=>{if(ev.button)return;ev.preventDefault();ev.stopPropagation();startDrag(ev,si,pi,PI(x.ty)+' '+x.n,null)});
   m.on('dragend',()=>{const p=m.getLatLng();x.lat=Math.round(p.lat*1e5)/1e5;x.lon=Math.round(p.lng*1e5)/1e5;save();toast('Position von „'+x.n+'“ gespeichert.');drawMap()})}));
@@ -558,7 +559,7 @@ function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  case'sug':{const g=(SUG[s.n]||[]).filter(g=>!s.pl.some(x=>x.n===g[1]))[+d.k];if(!g)break;const np={ty:g[0],n:g[1],t:'',ok:0};addPlace(s,np);autoGeo(s,np);break}
  case'pl-cost':openCost[sel+':'+i]=!openCost[sel+':'+i];renderPanel();if(openCost[sel+':'+i]){const e=document.querySelector('#pbody .pc[data-i="'+i+'"] [data-f=pcost]');if(e)e.focus()}break
  case'pl-info':openInfo[sel+':'+i]=!openInfo[sel+':'+i];renderPanel();if(openInfo[sel+':'+i]){const e=document.querySelector('#pbody .pc[data-i="'+i+'"] .inote');if(e)e.focus()}break
- case'pl-vote':{const x=s.pl[i];if(!x||x.ty!=='S')break;x.vt=x.vt||{};x.vt[d.who]=!x.vt[d.who];save();renderPanel();break}
+ case'pl-vote':{const x=s.pl[i];if(!x||x.ty!=='S')break;x.vt=x.vt||{};x.vt[d.who]=!x.vt[d.who];save();renderPanel();drawMap();break}
  case'pl-ok':s.pl[i].ok=s.pl[i].ok?0:1;save();render();break;
  case'pl-go':{const x=s.pl[i];if(MAP&&x.lat!=null){MAP.flyTo([x.lat,x.lon],16,{duration:.8});if(mobile())sheet(0)}break}
  case'pl-pin':placingPl={si:sel,pi:i};$('lmap').style.cursor='crosshair';toast('Tippt auf die Karte, um „'+s.pl[i].n+'“ zu setzen.');if(mobile())sheet(0);break;
