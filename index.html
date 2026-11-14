@@ -597,7 +597,7 @@ function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  case'pl-ok':delete s.pl[i].nw;s.pl[i].ok=s.pl[i].ok?0:1;save();render();break;
  case'pl-go':{const x=s.pl[i];if(MAP&&x.lat!=null){MAP.flyTo([x.lat,x.lon],16,{duration:.8});if(mobile())sheet(0)}break}
  case'pl-pin':placingPl={si:sel,pi:i};$('lmap').style.cursor='crosshair';toast('Tippt auf die Karte, um „'+s.pl[i].n+'“ zu setzen.');if(mobile())sheet(0);break;
- case'pl-more':{openPl[sel+':'+i]=!openPl[sel+':'+i];renderPanel();const x=s.pl[i];if(openPl[sel+':'+i]&&x&&x.lat!=null&&MAP)showPt(x.lat,x.lon);break}
+ case'pl-more':{openPl[sel+':'+i]=!openPl[sel+':'+i];renderPanel();const x=s.pl[i];if(openPl[sel+':'+i]){if(x&&x.lat!=null&&MAP)showPt(x.lat,x.lon)}else if(MAP&&!Object.keys(openPl).some(k=>openPl[k]&&k.indexOf(sel+':')===0))focusStop(sel,11);break}
  case'pl-del':if(confirm('„'+s.pl[i].n+'“ entfernen?')){s.pl.splice(i,1);openPl={};save();render()}break;
  case'pl-base':s.pl.forEach(x=>{delete x.base});s.pl[i].base=1;save();render();break;
  case'open-kc':{sel=+d.i;openS=true;view='route';sub='kc';render();$('pbody').scrollTop=0;focusStop(sel,11);break}
