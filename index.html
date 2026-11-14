@@ -903,6 +903,12 @@ setInterval(()=>{if(SY&&document.visibilityState==='visible'&&!DIRTY)syPull(true
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&SY&&!DIRTY)syPull(true)});
 
 let cmpOpen=false;
+/* Tastatur: Pfeil rechts klappt einen Ort auf, Pfeil links klappt ihn zu */
+$('pbody').addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey)return;const t=e.target,pc=t.closest&&t.closest('.pc');if(!pc||!pc.dataset.i||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
+ const i=pc.dataset.i,key=sel+':'+i,open=!!openPl[key],top=pc.querySelector('.top'),k=e.key;
+ const refocus=()=>{const n=document.querySelector('#pbody .pc[data-i="'+i+'"] .top');if(n)n.focus({preventScroll:false})};
+ if(k==='ArrowRight'&&!open||k==='ArrowLeft'&&open||(k==='Enter'||k===' ')&&t===top){e.preventDefault();act('pl-more',top);refocus()}
+ else if((k==='ArrowDown'||k==='ArrowUp')&&t===top){const all=[...document.querySelectorAll('#pbody .pc .top')],n=all[all.indexOf(top)+(k==='ArrowDown'?1:-1)];if(n){e.preventDefault();n.focus()}}});
 /* Start */
 (function(){const m=/[#&]p=([^&]+)/.exec(location.hash);if(m){try{const o=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));if(o.s&&o.s.stops&&confirm('Geteilten Plan laden? Euer Stand in dieser Variante wird ersetzt.')){RG=PRE[o.rg]?o.rg:RG;LS.set('jp4-rg',RG);S=mig(o.s);save()}}catch(e){}history.replaceState(null,'',location.pathname)}})();
 syLoad();(function(){const m=/[#&]j=([^&~]+)(?:~(v\d))?/.exec(location.hash);if(m){history.replaceState(null,'',location.pathname);window.__join=[m[1],m[2]]}})();
