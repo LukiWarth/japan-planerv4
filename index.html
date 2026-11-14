@@ -233,6 +233,7 @@ table.cmp{border-collapse:collapse;width:100%;min-width:560px;font-size:.82rem}t
 
 .vote{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0 0}
 .vb{border:1px solid var(--soft);background:var(--soft);border-radius:99px;padding:5px 10px;font-size:.8rem;color:var(--ink)}.vb.on{background:#2f9e6b22;border-color:var(--ok)}.vb b{font-weight:800}
+.inote{width:100%;margin-top:6px;border-radius:10px;border:1px solid var(--soft);background:var(--card);color:var(--ink);padding:8px;font:inherit;resize:vertical}.inote-t{margin-top:6px;padding:7px 9px;background:var(--soft);border-radius:10px}
 .vboth{font-weight:800;font-size:.8rem;color:var(--ok)}
 </style>
 </head>
@@ -481,8 +482,8 @@ function sPl(s){let h='<div class="'+(plView==='cards'?'pcv':'')+'"><div class="
  if(!s.pl.length)h+='<p class="mut" style="margin-top:14px">Noch keine Orte. Sucht oben nach einem Restaurant, einer Sehenswürdigkeit oder eurer Unterkunft. Mit „Hinzufügen“ landet der Ort direkt auf der Karte.</p>';
  if(s.pl.some(x=>x.ty==='H'&&x.lat!=null))h+='<p class="sm" style="margin:12px 0 0;color:var(--blue)">🔵 Von der Basis-Unterkunft (⭐) zeigt die Karte blaue Wege zu allen Orten dieses Ziels (ab Zoom 8).</p>';
  PT.forEach(tp=>{const idx=[];s.pl.forEach((x,k)=>{if(x.ty===tp[0])idx.push(k)});if(!idx.length)return;h+='<h3>'+tp[1]+' '+tp[2]+' <span class="mut sm">('+idx.length+')</span></h3>'+idx.map(k=>plCard(s,k)).join('')});return h+'</div>'}
-const VN=[['c','Carmen'],['l','Lukas']];
-function voteHtml(si,k,x){if(x.ty!=='S')return'';const v=x.vt||{},both=v.c&&v.l;return'<div class="vote'+(both?' both':'')+'">'+VN.map(n=>'<button class="vb'+(v[n[0]]?' on':'')+'" data-a="pl-vote" data-who="'+n[0]+'" data-i="'+k+'" aria-pressed="'+(v[n[0]]?'true':'false')+'">'+(v[n[0]]?'✅':'☐')+' <b>'+n[1]+'</b>: will ich machen</button>').join('')+(both?'<span class="vboth">💞 Beide wollen</span>':'')+'</div>'}
+const VN=[['c','Carmen'],['l','Lukas']];let openInfo={};
+function voteHtml(si,k,x){if(x.ty!=='S')return'';const v=x.vt||{},both=v.c&&v.l;return'<div class="vote'+(both?' both':'')+'">'+VN.map(n=>'<button class="vb'+(v[n[0]]?' on':'')+'" data-a="pl-vote" data-who="'+n[0]+'" data-i="'+k+'" aria-pressed="'+(v[n[0]]?'true':'false')+'">'+(v[n[0]]?'✅':'☐')+' <b>'+n[1]+'</b>: will ich machen</button>').join('')+(both?'<span class="vboth">💞 Beide wollen</span>':'')+'<button class="vb'+(x.nt?' on':'')+'" data-a="pl-info" data-i="'+k+'" aria-expanded="'+(openInfo[si+':'+k]?'true':'false')+'">ℹ️ <b>Info</b>'+(x.nt?' ✎':'')+'</button></div>'+(openInfo[si+':'+k]?'<textarea class="inote" data-f="pnote" data-i="'+k+'" rows="4" placeholder="Eure eigenen Infos: Öffnungszeiten, Preise, Tipps, Anreise …">'+esc(x.nt||'')+'</textarea>':(x.nt?'<div class="inote-t sm">'+esc(x.nt).replace(/\n/g,'<br>')+'</div>':''))}
 const voteTag=x=>{if(x.ty!=='S'||!x.vt)return'';const v=x.vt;return v.c&&v.l?' 💞':v.c?' <small>C</small>':v.l?' <small>L</small>':''};
 function plCard(s,k){const x=s.pl[k],o=!!openPl[sel+':'+k],inf=x.info||{},w=safeUrl(inf.web),isH=x.ty==='H',bs=baseOf(s)===x;
  let h='<div class="pc'+(x.ok?' dn':'')+'" data-i="'+k+'"><div class="top">'+(phList(x)[0]?'<img class="pth" src="'+esc(phList(x)[0].u)+'" alt="" loading="lazy" data-a="lb" data-si="'+sel+'" data-pi="'+k+'" data-k="0">':'<span class="pic">'+PI(x.ty)+'</span>')+'<div style="flex:1;min-width:0"><input type="text" class="pn" data-f="pn" data-i="'+k+'" value="'+esc(x.n)+'" style="width:100%">'+(dayOf(s,x)!==null?'<div class="sm" style="color:#8a3fc7;font-weight:700">📅 '+dstr(visit(sel)[0]+dayOf(s,x))+(x.tm?' · '+esc(x.tm):'')+'</div>':'')+(x.t||inf.hours?'<div class="mut sm">'+(inf.hours?'⏰ '+esc(fmtH(inf.hours).split(';')[0]):'')+(x.t&&inf.hours?' · ':'')+esc(x.t||'')+'</div>':'')+'</div>'+
@@ -544,6 +545,7 @@ function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  case'hit-place':{const o=HITS[+d.k];if(!o)break;const ty=guessTy(o);addPlace(s,{ty,n:niceName(o),jp:origName(o)||undefined,t:'',ok:0,lat:Math.round(+o.lat*1e5)/1e5,lon:Math.round(+o.lon*1e5)/1e5,info:extractInfo(o)},true);toast('„'+niceName(o)+'“ hinzugefügt und auf der Karte gesetzt.');break}
  case'hit-manual':{const np={ty:'X',n:d.q,t:'',ok:0};addPlace(s,np);autoGeo(s,np);break}
  case'sug':{const g=(SUG[s.n]||[]).filter(g=>!s.pl.some(x=>x.n===g[1]))[+d.k];if(!g)break;const np={ty:g[0],n:g[1],t:'',ok:0};addPlace(s,np);autoGeo(s,np);break}
+ case'pl-info':openInfo[sel+':'+i]=!openInfo[sel+':'+i];renderPanel();if(openInfo[sel+':'+i]){const e=document.querySelector('#pbody .pc[data-i="'+i+'"] .inote');if(e)e.focus()}break
  case'pl-vote':{const x=s.pl[i];if(!x||x.ty!=='S')break;x.vt=x.vt||{};x.vt[d.who]=!x.vt[d.who];save();renderPanel();break}
  case'pl-ok':s.pl[i].ok=s.pl[i].ok?0:1;save();render();break;
  case'pl-go':{const x=s.pl[i];if(MAP&&x.lat!=null){MAP.flyTo([x.lat,x.lon],16,{duration:.8});if(mobile())sheet(0)}break}
@@ -595,6 +597,7 @@ function field(t){const f=t.dataset.f,s=S.stops[sel],i=+t.dataset.i;if(f==='syau
  case'sn':s.n=t.value;saveSoon();drawMap();break;
  case'pn':s.pl[i].n=t.value;saveSoon();break;
  case'pt':s.pl[i].t=t.value;saveSoon();break;
+ case'pnote':s.pl[i].nt=t.value;saveSoon();break;
  case'pty':s.pl[i].ty=t.value;save();render();break;
  case'it':s.items[i].t=t.value;saveSoon();break;
  case'ia':s.items[i].a=+t.value||0;saveSoon();if($('ks'))$('ks').textContent=eur(sum(s));break;
