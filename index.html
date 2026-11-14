@@ -353,6 +353,7 @@ const yr=()=>new Date(pD(S.start)*864e5).getUTCFullYear();
 const nd=s=>Math.max(1,+s.d||1);
 const visit=i=>{let a=pD(S.start);for(let k=0;k<i;k++)a+=nd(S.stops[k]);return[a,a+nd(S.stops[i])-1]};
 const days=()=>S.stops.reduce((t,s)=>t+nd(s),0);
+const clSum=s=>plCost(s)+(s.cl||[]).reduce((t,x)=>t+(+x.a||0),0);
 const plCost=s=>(s.pl||[]).reduce((t,x)=>t+(x.ty==='S'?2*(+x.c||0):0),0);
 const sum=(s,g)=>(s.items||[]).reduce((t,x)=>t+(!g||(g==='R'?(x.g==='R'||x.g==='S'):x.g===g)?(+x.a||0):0),0);
 function cats(){const c={};CATS.forEach(k=>c[k[0]]=0);S.stops.forEach(s=>s.items.forEach(x=>{const g=x.g==='S'?'R':x.g;if(c[g]!=null)c[g]+=(+x.a||0)}));c.F=2*(+S.fl||0);c.P=(c.U+c.E+c.A+c.R+c.F)*(+S.bf||0)/100;return c}
@@ -471,8 +472,8 @@ function vStop(){const s=S.stops[sel],i=sel,t=tg0(s),vi=visit(i),b=bl(i);
  let h='<button class="back" data-a="back">‹ Alle Ziele</button><div class="hh" style="'+stopHero(s)+'"><span class="em">'+(heroImg(s)?'':t[0])+'</span><input type="text" data-f="sn" value="'+esc(s.n)+'" aria-label="Name"><div class="sub">Ziel '+(i+1)+' von '+S.stops.length+' · '+fD(vi[0])+'–'+fD(vi[1])+' · <span id="hc">'+eur(sum(s))+'</span></div></div>';
  h+='<div class="row" style="margin-bottom:8px"><div class="step"><button data-a="nights" data-d="-1">−</button><span>'+nd(s)+' Nächte</span><button data-a="nights" data-d="1">+</button></div><button class="btn sm2" data-a="mv" data-d="-1" title="Früher in der Reise"'+(i===0?' disabled':'')+'>↑</button><button class="btn sm2" data-a="mv" data-d="1" title="Später in der Reise"'+(i===S.stops.length-1?' disabled':'')+'>↓</button><button class="btn sm2" data-a="zoomstop">🎯 Karte</button><button class="btn sm2" data-a="delstop" style="margin-left:auto">🗑️</button></div>';
  h+='<div class="chips">'+Object.keys(TG).map(k=>'<button class="chip'+((s.tg||'').includes(k)?' on':'')+'" data-a="tag" data-t="'+k+'">'+TG[k][0]+' '+TG[k][1]+'</button>').join('')+'</div>';
- h+='<div class="tabs">'+[['ov','Überblick'],['pl','Orte '+(s.pl.length?'('+s.pl.length+')':'')],['ko','Kosten'],['nt','Notizen']].map(x=>'<button data-a="sub" data-s="'+x[0]+'" class="'+(sub===x[0]?'on':'')+'">'+x[1]+'</button>').join('')+'</div>';
- h+='<div id="sbody">'+(sub==='pl'?sPl(s):sub==='ko'?sKo(s):sub==='nt'?sNt(s):sOv(s,b))+'</div>';return h}
+ h+='<div class="tabs">'+[['ov','Überblick'],['pl','Orte '+(s.pl.length?'('+s.pl.length+')':'')],['ko','Kosten'],['kc','Kosten CL'],['nt','Notizen']].map(x=>'<button data-a="sub" data-s="'+x[0]+'" class="'+(sub===x[0]?'on':'')+'">'+x[1]+'</button>').join('')+'</div>';
+ h+='<div id="sbody">'+(sub==='pl'?sPl(s):sub==='kc'?sKc(s):sub==='ko'?sKo(s):sub==='nt'?sNt(s):sOv(s,b))+'</div>';return h}
 function sOv(s,b){const lines=x=>String(x||'').split('\n').map(a=>a.trim()).filter(Boolean);let h='';
  if(b)h+='<div class="bloom '+b.k+'">'+b.e+' '+esc(b.t)+'</div>';
  if(s.note)h+='<p style="margin:0 0 8px">'+esc(s.note).replace(/\n/g,'<br>')+'</p>';
@@ -497,13 +498,18 @@ function plCard(s,k){const x=s.pl[k],o=!!openPl[sel+':'+k],inf=x.info||{},w=safe
   if(!inf.addr&&!inf.hours&&!inf.web&&!inf.phone)h+='<div class="mut sm">Keine Detailinfos hinterlegt (OpenStreetMap kennt sie nicht). Notiz oben ergänzen.</div>';
   h+='<div class="row">'+(w?'<a class="btn sm2" href="'+esc(w)+'" target="_blank" rel="noopener">🌐 Website</a>':'')+'<a class="btn sm2" target="_blank" rel="noopener" href="'+(x.lat!=null?gm(x.lat,x.lon):'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(x.n+' '+s.n+' Japan'))+'">Google Maps</a>'+(x.lat!=null?'<button class="btn sm2" data-a="pl-pin" data-i="'+k+'">📌 Neu setzen</button>':'')+(isH&&x.lat!=null?'<button class="btn sm2'+(bs?' pri':'')+'" data-a="pl-base" data-i="'+k+'">⭐ '+(bs?'Basis-Unterkunft':'Als Basis nutzen')+'</button>':'')+'<button class="btn sm2" data-a="pl-del" data-i="'+k+'" style="margin-left:auto">🗑️</button></div></div>'}
  return h+'</div>'}
+function sKc(s){const L=s.cl||(s.cl=[]),cs={};L.forEach(x=>{const g=x.g==='S'?'R':x.g;cs[g]=(cs[g]||0)+(+x.a||0)});const pc=plCost(s);cs.A=(cs.A||0)+pc;let h='<p class="sm mut" style="margin:0 0 8px"><i class="dot"></i> Eure zweite Rechnung für <b>C</b>armen und <b>L</b>ukas. Sie ist <b>nicht</b> in den Gesamtkosten enthalten.</p>';
+ if(pc)h+='<div class="clr" style="margin-bottom:6px"><span>🎟️ Eintritte der Sehenswürdigkeiten (Button „Kosten“ unter „Orte“)</span><b>'+eur(pc)+'</b></div>';
+ L.forEach((x,k)=>{h+='<div class="it"><select data-f="cg" data-i="'+k+'">'+GR.map(g=>'<option value="'+g[0]+'"'+(g[0]===x.g?' selected':'')+'>'+g[1].split(' ')[0]+'</option>').join('')+'</select><input type="text" data-f="ct" data-i="'+k+'" value="'+esc(x.t)+'" placeholder="Posten"><input type="number" data-f="ca" data-i="'+k+'" min="0" value="'+(+x.a||0)+'"><button class="x" data-a="cl-del" data-i="'+k+'">×</button></div>'});
+ const tot=clSum(s);h+='<button class="btn sm2" data-a="cl-add">+ Posten</button><h3>Summe CL <span id="kcs" style="margin-left:auto">'+eur(tot)+'</span></h3>';
+ const tt=tot||1;h+='<div class="bar">'+CATS.slice(0,4).map(c=>'<i style="width:'+(100*(cs[c[0]]||0)/tt)+'%;background:'+c[3]+'" title="'+c[2]+'"></i>').join('')+'</div><div class="legend">'+CATS.slice(0,4).map(c=>cs[c[0]]?'<div><i class="dot" style="background:'+c[3]+';margin:0"></i>'+c[1]+' '+c[2]+'<span>'+eur(cs[c[0]])+'</span></div>':'').join('')+'</div><p class="mut sm">Alles Schätzungen, einfach überschreiben.</p>';return h}
 function sKo(s){let h='';const cs={};s.items.forEach(x=>{const g=x.g==='S'?'R':x.g;cs[g]=(cs[g]||0)+(+x.a||0)});
  s.items.forEach((x,k)=>{h+='<div class="it"><select data-f="ig" data-i="'+k+'">'+GR.map(g=>'<option value="'+g[0]+'"'+(g[0]===x.g?' selected':'')+'>'+g[1].split(' ')[0]+'</option>').join('')+'</select><input type="text" data-f="it" data-i="'+k+'" value="'+esc(x.t)+'"><input type="number" data-f="ia" data-i="'+k+'" min="0" value="'+(+x.a||0)+'"><button class="x" data-a="it-del" data-i="'+k+'">×</button></div>'});
- if(plCost(s))h+='<div class="cl"><i class="dot"></i> Kosten Aktivitäten CL <b>'+eur(plCost(s))+'</b><span class="mut sm">nicht in der Summe</span></div>';h+='<button class="btn sm2" data-a="it-add">+ Posten</button><h3>Summe <span id="ks" style="margin-left:auto">'+eur(sum(s))+'</span></h3>';
+ h+='<button class="btn sm2" data-a="it-add">+ Posten</button><h3>Summe <span id="ks" style="margin-left:auto">'+eur(sum(s))+'</span></h3>';
  const tot=sum(s)||1;h+='<div class="bar">'+CATS.slice(0,4).map(c=>'<i style="width:'+(100*(cs[c[0]]||0)/tot)+'%;background:'+c[3]+'" title="'+c[2]+'"></i>').join('')+'</div><div class="legend">'+CATS.slice(0,4).map(c=>cs[c[0]]?'<div><i style="background:'+c[3]+'"></i>'+c[1]+' '+c[2]+'<span>'+eur(cs[c[0]])+'</span></div>':'').join('')+'</div><p class="mut sm">Alles Schätzungen für zwei Personen, einfach überschreiben.</p>';return h}
 function sNt(s){return'<label class="sm mut">Beschreibung und Notizen</label><textarea data-f="note" placeholder="Hotels, Ideen, Buchungsnummern …">'+esc(s.note)+'</textarea><label class="sm mut">🍜 Typisches Essen (ein Gericht pro Zeile)</label><textarea data-f="food">'+esc(s.food)+'</textarea><label class="sm mut">🌸 Kirschblüten-Spots (ein Ort pro Zeile)</label><textarea data-f="sp">'+esc(s.sp)+'</textarea><h3>🖼️ Bilder <span class="mut sm">(erscheinen beim Überfahren des Pins auf der Karte)</span></h3><div class="imgs">'+s.imgs.map((u,k)=>'<div style="background-image:url('+u+')"><b data-a="img-del" data-k="'+k+'">×</b></div>').join('')+'</div><label class="btn" style="margin-top:8px">+ Bilder hinzufügen<input type="file" id="fi" accept="image/*" multiple hidden></label>'}
-function clCard(){const rows=[];let tot=0;S.stops.forEach((s,si)=>s.pl.forEach(x=>{if(x.ty==='S'&&+x.c>0){rows.push([s.n,x.n,+x.c]);tot+=2*(+x.c)}}));
- return'<div class="card cl"><h3 style="margin:0 0 6px"><i class="dot"></i> Kosten Aktivitäten CL <span style="margin-left:auto">'+eur(tot)+'</span></h3>'+(rows.length?rows.map(r=>'<div class="clr"><span>'+esc(r[1])+' <span class="mut sm">'+esc(r[0].split(' &')[0])+'</span></span><b>'+eur(2*r[2])+'</b><span class="mut sm">'+eur(r[2])+' p. P.</span></div>').join(''):'<p class="mut sm" style="margin:0">Noch keine Preise. Bei einer Sehenswürdigkeit unter „Orte“ auf „💶 Kosten“ tippen und den Preis pro Person eintragen.</p>')+'<p class="mut sm" style="margin:8px 0 0">Nur ein Überblick: Diese Summe ist nicht in den Gesamtkosten oben enthalten.</p></div>'}
+function clCard(){let tot=0;const rows=[];S.stops.forEach((s,si)=>{const v=clSum(s);tot+=v;if(v>0)rows.push([si,s.n,v])});
+ return'<div class="card cl"><h3 style="margin:0 0 6px"><i class="dot"></i> Kosten CL <span style="margin-left:auto">'+eur(tot)+'</span></h3>'+(rows.length?rows.map(r=>'<div class="clr" data-a="open-kc" data-i="'+r[0]+'" style="cursor:pointer"><span>'+esc(r[1])+'</span><b>'+eur(r[2])+'</b><span></span></div>').join(''):'<p class="mut sm" style="margin:0">Noch nichts eingetragen. Je Ziel gibt es den Reiter „Kosten CL“.</p>')+'<p class="mut sm" style="margin:8px 0 0">Nur ein Überblick: nicht in den Gesamtkosten oben enthalten.</p></div>'}
 function vBudget(){const c=cats(),tot=grand()||1;let acc=0;
  const arcs=CATS.map(k=>{const p=100*c[k[0]]/tot,a='<circle r="15.9155" cx="21" cy="21" fill="none" stroke="'+k[3]+'" stroke-width="6.5" stroke-dasharray="'+p+' '+(100-p)+'" stroke-dashoffset="'+(25-acc)+'"/>';acc+=p;return a}).join('');
  let h='<h2>💶 Budget</h2><div class="card"><svg class="donut" viewBox="0 0 42 42"><circle r="15.9155" cx="21" cy="21" fill="none" stroke="var(--soft)" stroke-width="6.5"/>'+arcs+'<text x="21" y="20.5" font-size="4.6" font-weight="800">'+eur(grand())+'</text><text x="21" y="25.5" font-size="2.6" fill="var(--mut)" style="fill:var(--mut)">'+eur(grand()/2)+' pro Person</text></svg><div class="legend">'+CATS.map(k=>'<div><i style="background:'+k[3]+'"></i>'+k[1]+' '+k[2]+'<span>'+eur(c[k[0]])+'</span></div>').join('')+'</div></div>';
@@ -559,6 +565,9 @@ function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  case'pl-more':openPl[sel+':'+i]=!openPl[sel+':'+i];renderPanel();break;
  case'pl-del':if(confirm('„'+s.pl[i].n+'“ entfernen?')){s.pl.splice(i,1);openPl={};save();render()}break;
  case'pl-base':s.pl.forEach(x=>{delete x.base});s.pl[i].base=1;save();render();break;
+ case'open-kc':{sel=+d.i;openS=true;view='route';sub='kc';render();$('pbody').scrollTop=0;focusStop(sel,11);break}
+ case'cl-add':(s.cl=s.cl||[]).push({g:'A',t:'',a:0});save();renderPanel();break;
+ case'cl-del':(s.cl||[]).splice(i,1);save();renderPanel();break;
  case'it-add':s.items.push({g:'S',t:'',a:0});save();renderPanel();break;
  case'it-del':s.items.splice(i,1);save();renderPanel();break;
  case'cal-mode':{calMode=d.m;cmpOpen=false;if(calMode==='day'){curDay=null;ensureDay()}else{tlDay=null;actDay=null}render();if(calMode==='day'&&curDay)fitChain(curDay.si,curDay.day);break}
@@ -603,6 +612,9 @@ function field(t){const f=t.dataset.f,s=S.stops[sel],i=+t.dataset.i;if(f==='syau
  case'sn':s.n=t.value;saveSoon();drawMap();break;
  case'pn':s.pl[i].n=t.value;saveSoon();break;
  case'pt':s.pl[i].t=t.value;saveSoon();break;
+ case'ct':s.cl[i].t=t.value;saveSoon();break;
+ case'ca':s.cl[i].a=+t.value||0;saveSoon();if($('kcs'))$('kcs').textContent=eur(clSum(s));break;
+ case'cg':s.cl[i].g=t.value;save();renderPanel();break;
  case'pcost':{const v=Math.max(0,+t.value||0);s.pl[i].c=v||undefined;saveSoon();const e=t.closest('.costrow');if(e)e.querySelector('.ctot').textContent=eur(2*v);break}
  case'pnote':s.pl[i].nt=t.value;saveSoon();break;
  case'pty':s.pl[i].ty=t.value;save();render();break;
