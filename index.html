@@ -532,7 +532,7 @@ function sPl(s){let h='<div class="'+(plView==='cards'?'pcv':'')+'"><div class="
  const sg=(SUG[s.n]||[]).filter(g=>!s.pl.some(x=>x.n===g[1]));if(sg.length)h+='<p class="mut sm" style="margin:8px 0 4px">Vorschläge für dieses Ziel:</p><div class="chips">'+sg.map((g,k)=>'<button class="chip add" data-a="sug" data-k="'+k+'">+ '+PI(g[0])+' '+esc(g[1])+'</button>').join('')+'</div>';
  if(!s.pl.length)h+='<p class="mut" style="margin-top:14px">Noch keine Orte. Sucht oben nach einem Restaurant, einer Sehenswürdigkeit oder eurer Unterkunft. Mit „Hinzufügen“ landet der Ort direkt auf der Karte.</p>';
  if(s.pl.some(x=>x.ty==='H'&&x.lat!=null))h+='<p class="sm" style="margin:12px 0 0;color:var(--blue)">🔵 Von der Basis-Unterkunft (⭐) zeigt die Karte blaue Wege zu allen Orten dieses Ziels (ab Zoom 8).</p>';
- PT.forEach(tp=>{const idx=[];s.pl.forEach((x,k)=>{if(x.ty===tp[0]&&!isX(x))idx.push(k)});if(!idx.length)return;h+='<h3>'+tp[1]+' '+tp[2]+' <span class="mut sm">('+idx.length+')</span></h3>'+idx.map(k=>plCard(s,k)).join('')});
+ PT.forEach(tp=>{const idx=[];s.pl.forEach((x,k)=>{if(x.ty===tp[0]&&!isX(x))idx.push(k)});if(!idx.length)return;idx.sort((p,q)=>String(s.pl[p].n||'').localeCompare(String(s.pl[q].n||''),'de',{sensitivity:'base'}));h+='<h3>'+tp[1]+' '+tp[2]+' <span class="mut sm">('+idx.length+')</span></h3>'+idx.map(k=>plCard(s,k)).join('')});
  const xs=[];s.pl.forEach((x,k)=>{if(isX(x))xs.push(k)});if(xs.length)h+='<h3 class="xh">✖️ Attraktionen X <span class="mut sm">('+xs.length+', beide unter 50)</span></h3>'+xs.map(k=>plCard(s,k)).join('');return h+'</div>'}
 const VN=[['c','Carmen'],['l','Lukas']];let openInfo={},openCost={};
 const vn=(x,w)=>{const v=x.vn&&x.vn[w];return v>=1?Math.min(100,Math.round(v)):null};
