@@ -429,16 +429,16 @@ function drawMap(){
   for(let i=0;i+1<c.pts.length;i++){const a=c.pts[i],b=c.pts[i+1],l=legInfo(a,b);if(l.rd)L.polyline(l.rd.c,{color:'#8a3fc7',weight:5,opacity:.9}).addTo(LAYER);else L.polyline([ll(a),ll(b)],{color:'#8a3fc7',weight:4,dashArray:'7 6',opacity:.9}).addTo(LAYER)}
   c.its.forEach((x,j)=>L.marker([x.lat,x.lon],{icon:L.divIcon({className:'mkw',html:'<div class="cn">'+(j+1)+'</div>',iconSize:[20,20],iconAnchor:[-4,24]}),interactive:false,keyboard:false,zIndexOffset:900}).addTo(LAYER));
   if(c.hasBase)L.marker([c.base.lat,c.base.lon],{icon:L.divIcon({className:'mkw',html:'<div class="pp hb" style="--c:#8a3fc7">🛏️</div>',iconSize:[28,28],iconAnchor:[14,14]}),interactive:false,keyboard:false,zIndexOffset:800}).addTo(LAYER)}
- if(z>=9||actDay)v.forEach((s,si)=>(s.pl||[]).forEach((x,pi)=>{if(x.lat==null||x.lon==null)return;if(HID[x.ty]&&x.ty!=='H'||HID[x.ty]&&x.ty==='H')return;if(ONLYDAY&&actDay&&(si!==actDay.si||dayOf(s,x)!==actDay.day))return;if(actDay&&(si!==actDay.si||dayOf(s,x)!==actDay.day)&&z<9)return;
+ if(z>=9||actDay||(openS&&v[sel]))v.forEach((s,si)=>(s.pl||[]).forEach((x,pi)=>{if(x.lat==null||x.lon==null)return;if(z<9&&!actDay&&!(openS&&si===sel))return;if(HID[x.ty]&&x.ty!=='H'||HID[x.ty]&&x.ty==='H')return;if(ONLYDAY&&actDay&&(si!==actDay.si||dayOf(s,x)!==actDay.day))return;if(actDay&&(si!==actDay.si||dayOf(s,x)!==actDay.day)&&z<9)return;
   const m=L.marker([x.lat,x.lon],{icon:L.divIcon({className:'mkw',html:'<div class="pp'+(x.ok?' dn':'')+(x===hot?' hb':'')+'" style="--c:'+tg0(s)[2]+'">'+PI(x.ty)+(x.ty==='S'&&x.vt&&x.vt.c?'<span class="vm vc" title="Carmen: will ich machen">C</span>':'')+(x.ty==='S'&&x.vt&&x.vt.l?'<span class="vm vl" title="Lukas: will ich machen">L</span>':'')+'</div>'+(z>=12?'<span class="mkl" style="top:30px">'+esc(x.n)+'</span>':''),iconSize:[28,28],iconAnchor:[14,14]}),draggable:si===sel&&openS,zIndexOffset:500,title:x.n}).addTo(LAYER);
-  m.on('click',()=>{if(tlDay&&tlDay.si===si&&dayOf(s,x)!==tlDay.day){x.day=tlDay.day;x.ord=1e6;normDay(si,tlDay.day);save();toast('„'+x.n+'“ zu '+dstr(visit(si)[0]+tlDay.day)+' hinzugefügt. Ziehen auf die Zeitachse legt die Uhrzeit fest.');renderPanel();drawMap();return}window.openPlace(si,pi)});
-  const el=m.getElement&&m.getElement();if(el&&tlDay&&tlDay.si===si&&!mobile())el.addEventListener('pointerdown',ev=>{if(ev.button)return;ev.preventDefault();ev.stopPropagation();startDrag(ev,si,pi,PI(x.ty)+' '+x.n,null)});
+  m.on('click',()=>{if(view==='cal'&&tlDay&&tlDay.si===si&&dayOf(s,x)!==tlDay.day){x.day=tlDay.day;x.ord=1e6;normDay(si,tlDay.day);save();toast('„'+x.n+'“ zu '+dstr(visit(si)[0]+tlDay.day)+' hinzugefügt. Ziehen auf die Zeitachse legt die Uhrzeit fest.');renderPanel();drawMap();return}window.openPlace(si,pi)});
+  const el=m.getElement&&m.getElement();if(el&&view==='cal'&&tlDay&&tlDay.si===si&&!mobile())el.addEventListener('pointerdown',ev=>{if(ev.button)return;ev.preventDefault();ev.stopPropagation();startDrag(ev,si,pi,PI(x.ty)+' '+x.n,null)});
   m.on('dragend',()=>{const p=m.getLatLng();x.lat=Math.round(p.lat*1e5)/1e5;x.lon=Math.round(p.lng*1e5)/1e5;save();toast('Position von „'+x.n+'“ gespeichert.');drawMap()})}));
  v.forEach((s,i)=>{const t=tg0(s),imgs=(s.imgs||[]).slice(0,4);
   const m=L.marker(ll(s),{icon:L.divIcon({className:'mkw',html:'<div class="mk'+(i===sel?' act':'')+'" style="--c:'+t[2]+'">'+t[0]+'<b>'+(i+1)+'</b></div><span class="mkl">'+esc(s.n)+'</span>',iconSize:[36,36],iconAnchor:[18,18]}),zIndexOffset:i===sel?1000:0,title:s.n}).addTo(LAYER);
   if(imgs.length)m.bindTooltip('<div class="tip">'+imgs.map(u=>'<img src="'+u+'" alt="">').join('')+'</div>',{direction:'top',offset:[0,-20],opacity:1});
   m.on('click',()=>openStop(i))})}
-function focusStop(i,zoom){if(!MAP)return;const s=S.stops[i];if(!s)return;const pts=[ll(s)];(s.pl||[]).forEach(x=>{if(x.lat!=null)pts.push([x.lat,x.lon])});
+function focusStop(i,zoom){if(!MAP)return;const s=S.stops[i];if(!s)return;const pts=[ll(s)];(s.pl||[]).forEach(x=>{if(x.lat!=null&&hav(s,x)<60)pts.push([x.lat,x.lon])});
  const mob=window.innerWidth<=820,pb=mob?$('panel').offsetHeight:0;
  try{MAP.fitBounds(pts,{paddingTopLeft:[30,60],paddingBottomRight:[mob?30:60,pb+30],maxZoom:zoom||13,animate:true})}catch(e){MAP.setView(ll(s),zoom||11)}}
 function showPt(la,lo){if(!MAP)return;const mob=mobile(),pb=mob?$('panel').offsetHeight:0;try{MAP.fitBounds([[la,lo]],{paddingTopLeft:[30,60],paddingBottomRight:[30,pb+30],maxZoom:Math.max(MAP.getZoom(),15),animate:true})}catch(e){MAP.setView([la,lo],15)}}
@@ -457,7 +457,7 @@ function sheet(n){SH=n;if(!mobile()){$('panel').style.height='';return}const H=$
  h.onpointerup=end;h.onpointercancel=end})();
 window.addEventListener('resize',()=>{sheet(SH)});
 /* ---------- Panel ---------- */
-function render(){renderTop();renderPanel();drawMap()}
+function render(){if(view!=='cal'){actDay=null;tlDay=null}renderTop();renderPanel();drawMap()}
 function renderPanel(){if(view==='cal'&&calMode==='day')ensureDay();else if(view!=='cal'&&view!=='home'&&0){}const b=$('pbody'),st=b.scrollTop;b.innerHTML=view==='home'?vHome():view==='cal'?(cmpOpen?vCmp():calMode==='day'?vDay():vCal()):view==='budget'?vBudget():view==='bloom'?vBloom():view==='more'?vMore():(openS&&S.stops[sel]?vStop():vRoute());b.scrollTop=st}
 function heroImg(s){return(s.imgs&&s.imgs[0])||(s.ph&&s.ph[0]&&s.ph[0].u)||''}
 function stopHero(s,cls){const im=heroImg(s),t=tg0(s);return im?'background-image:url('+im+')':'background:linear-gradient(135deg,'+t[2]+','+t[3]+')'}
