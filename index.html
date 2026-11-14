@@ -234,6 +234,7 @@ table.cmp{border-collapse:collapse;width:100%;min-width:560px;font-size:.82rem}t
 .vote{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0 0}
 .vb{border:1px solid var(--soft);background:var(--soft);border-radius:99px;padding:5px 10px;font-size:.8rem;color:var(--ink)}.vb.on{background:#2f9e6b22;border-color:var(--ok)}.vb b{font-weight:800}
 .inote{width:100%;margin-top:6px;border-radius:10px;border:1px solid var(--soft);background:var(--card);color:var(--ink);padding:8px;font:inherit;resize:vertical}.inote-t{margin-top:6px;padding:7px 9px;background:var(--soft);border-radius:10px}
+.costrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px}.costrow input{width:90px;display:inline-block}
 .vboth{font-weight:800;font-size:.8rem;color:var(--ok)}
 </style>
 </head>
@@ -351,8 +352,9 @@ const yr=()=>new Date(pD(S.start)*864e5).getUTCFullYear();
 const nd=s=>Math.max(1,+s.d||1);
 const visit=i=>{let a=pD(S.start);for(let k=0;k<i;k++)a+=nd(S.stops[k]);return[a,a+nd(S.stops[i])-1]};
 const days=()=>S.stops.reduce((t,s)=>t+nd(s),0);
-const sum=(s,g)=>(s.items||[]).reduce((t,x)=>t+(!g||(g==='R'?(x.g==='R'||x.g==='S'):x.g===g)?(+x.a||0):0),0);
-function cats(){const c={};CATS.forEach(k=>c[k[0]]=0);S.stops.forEach(s=>s.items.forEach(x=>{const g=x.g==='S'?'R':x.g;if(c[g]!=null)c[g]+=(+x.a||0)}));c.F=2*(+S.fl||0);c.P=(c.U+c.E+c.A+c.R+c.F)*(+S.bf||0)/100;return c}
+const plCost=s=>(s.pl||[]).reduce((t,x)=>t+(x.ty==='S'?2*(+x.c||0):0),0);
+const sum=(s,g)=>((!g||g==='A')?plCost(s):0)+(s.items||[]).reduce((t,x)=>t+(!g||(g==='R'?(x.g==='R'||x.g==='S'):x.g===g)?(+x.a||0):0),0);
+function cats(){const c={};CATS.forEach(k=>c[k[0]]=0);S.stops.forEach(s=>{c.A+=plCost(s);s.items.forEach(x=>{const g=x.g==='S'?'R':x.g;if(c[g]!=null)c[g]+=(+x.a||0)})});c.F=2*(+S.fl||0);c.P=(c.U+c.E+c.A+c.R+c.F)*(+S.bf||0)/100;return c}
 const grand=()=>{const c=cats();return c.U+c.E+c.A+c.R+c.F+c.P};
 function bw(s){const w=SAK[s.n];if(!w)return null;const y=yr(),sh=+S.shift||0,a=w[0].split('-'),b=w[1].split('-');return[dnum(y,+a[0],+a[1])+sh,dnum(y,+b[0],+b[1])+sh]}
 function bl(i){const s=S.stops[i],w=bw(s);if(!w)return null;const v=visit(i),ov=Math.max(0,Math.min(v[1],w[1])-Math.max(v[0],w[0])+1),len=v[1]-v[0]+1,me=fD(v[0])+'–'+fD(v[1]),b=fD(w[0])+'–'+fD(w[1]);
@@ -482,8 +484,8 @@ function sPl(s){let h='<div class="'+(plView==='cards'?'pcv':'')+'"><div class="
  if(!s.pl.length)h+='<p class="mut" style="margin-top:14px">Noch keine Orte. Sucht oben nach einem Restaurant, einer Sehenswürdigkeit oder eurer Unterkunft. Mit „Hinzufügen“ landet der Ort direkt auf der Karte.</p>';
  if(s.pl.some(x=>x.ty==='H'&&x.lat!=null))h+='<p class="sm" style="margin:12px 0 0;color:var(--blue)">🔵 Von der Basis-Unterkunft (⭐) zeigt die Karte blaue Wege zu allen Orten dieses Ziels (ab Zoom 8).</p>';
  PT.forEach(tp=>{const idx=[];s.pl.forEach((x,k)=>{if(x.ty===tp[0])idx.push(k)});if(!idx.length)return;h+='<h3>'+tp[1]+' '+tp[2]+' <span class="mut sm">('+idx.length+')</span></h3>'+idx.map(k=>plCard(s,k)).join('')});return h+'</div>'}
-const VN=[['c','Carmen'],['l','Lukas']];let openInfo={};
-function voteHtml(si,k,x){if(x.ty!=='S')return'';const v=x.vt||{},both=v.c&&v.l;return'<div class="vote'+(both?' both':'')+'">'+VN.map(n=>'<button class="vb'+(v[n[0]]?' on':'')+'" data-a="pl-vote" data-who="'+n[0]+'" data-i="'+k+'" aria-pressed="'+(v[n[0]]?'true':'false')+'">'+(v[n[0]]?'✅':'☐')+' <b>'+n[1]+'</b>: will ich machen</button>').join('')+(both?'<span class="vboth">💞 Beide wollen</span>':'')+'<button class="vb'+(x.nt?' on':'')+'" data-a="pl-info" data-i="'+k+'" aria-expanded="'+(openInfo[si+':'+k]?'true':'false')+'">ℹ️ <b>Info</b>'+(x.nt?' ✎':'')+'</button></div>'+(openInfo[si+':'+k]?'<textarea class="inote" data-f="pnote" data-i="'+k+'" rows="4" placeholder="Eure eigenen Infos: Öffnungszeiten, Preise, Tipps, Anreise …">'+esc(x.nt||'')+'</textarea>':(x.nt?'<div class="inote-t sm">'+esc(x.nt).replace(/\n/g,'<br>')+'</div>':''))}
+const VN=[['c','Carmen'],['l','Lukas']];let openInfo={},openCost={};
+function voteHtml(si,k,x){if(x.ty!=='S')return'';const v=x.vt||{},both=v.c&&v.l;return'<div class="vote'+(both?' both':'')+'">'+VN.map(n=>'<button class="vb'+(v[n[0]]?' on':'')+'" data-a="pl-vote" data-who="'+n[0]+'" data-i="'+k+'" aria-pressed="'+(v[n[0]]?'true':'false')+'">'+(v[n[0]]?'✅':'☐')+' <b>'+n[1]+'</b>: will ich machen</button>').join('')+(both?'<span class="vboth">💞 Beide wollen</span>':'')+'<button class="vb'+(x.c?' on':'')+'" data-a="pl-cost" data-i="'+k+'" aria-expanded="'+(openCost[si+':'+k]?'true':'false')+'">💶 <b>Kosten</b>'+(x.c?' '+eur(+x.c)+' p. P.':'')+'</button>'+'<button class="vb'+(x.nt?' on':'')+'" data-a="pl-info" data-i="'+k+'" aria-expanded="'+(openInfo[si+':'+k]?'true':'false')+'">ℹ️ <b>Info</b>'+(x.nt?' ✎':'')+'</button></div>'+(openCost[si+':'+k]?'<div class="costrow"><label class="sm">€ pro Person <input type="number" min="0" step="1" inputmode="decimal" data-f="pcost" data-i="'+k+'" value="'+(x.c!=null&&x.c!==''?x.c:'')+'" placeholder="0"></label><span class="sm">= <b class="ctot">'+eur(2*(+x.c||0))+'</b> für zwei (Eintritt, Ticket)</span></div>':'')+(openInfo[si+':'+k]?'<textarea class="inote" data-f="pnote" data-i="'+k+'" rows="4" placeholder="Eure eigenen Infos: Öffnungszeiten, Preise, Tipps, Anreise …">'+esc(x.nt||'')+'</textarea>':(x.nt?'<div class="inote-t sm">'+esc(x.nt).replace(/\n/g,'<br>')+'</div>':''))}
 const voteTag=x=>{if(x.ty!=='S'||!x.vt)return'';const v=x.vt;return v.c&&v.l?' 💞':v.c?' <small>C</small>':v.l?' <small>L</small>':''};
 function plCard(s,k){const x=s.pl[k],o=!!openPl[sel+':'+k],inf=x.info||{},w=safeUrl(inf.web),isH=x.ty==='H',bs=baseOf(s)===x;
  let h='<div class="pc'+(x.ok?' dn':'')+'" data-i="'+k+'"><div class="top">'+(phList(x)[0]?'<img class="pth" src="'+esc(phList(x)[0].u)+'" alt="" loading="lazy" data-a="lb" data-si="'+sel+'" data-pi="'+k+'" data-k="0">':'<span class="pic">'+PI(x.ty)+'</span>')+'<div style="flex:1;min-width:0"><input type="text" class="pn" data-f="pn" data-i="'+k+'" value="'+esc(x.n)+'" style="width:100%">'+(dayOf(s,x)!==null?'<div class="sm" style="color:#8a3fc7;font-weight:700">📅 '+dstr(visit(sel)[0]+dayOf(s,x))+(x.tm?' · '+esc(x.tm):'')+'</div>':'')+(x.t||inf.hours?'<div class="mut sm">'+(inf.hours?'⏰ '+esc(fmtH(inf.hours).split(';')[0]):'')+(x.t&&inf.hours?' · ':'')+esc(x.t||'')+'</div>':'')+'</div>'+
@@ -494,9 +496,9 @@ function plCard(s,k){const x=s.pl[k],o=!!openPl[sel+':'+k],inf=x.info||{},w=safe
   if(!inf.addr&&!inf.hours&&!inf.web&&!inf.phone)h+='<div class="mut sm">Keine Detailinfos hinterlegt (OpenStreetMap kennt sie nicht). Notiz oben ergänzen.</div>';
   h+='<div class="row">'+(w?'<a class="btn sm2" href="'+esc(w)+'" target="_blank" rel="noopener">🌐 Website</a>':'')+'<a class="btn sm2" target="_blank" rel="noopener" href="'+(x.lat!=null?gm(x.lat,x.lon):'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(x.n+' '+s.n+' Japan'))+'">Google Maps</a>'+(x.lat!=null?'<button class="btn sm2" data-a="pl-pin" data-i="'+k+'">📌 Neu setzen</button>':'')+(isH&&x.lat!=null?'<button class="btn sm2'+(bs?' pri':'')+'" data-a="pl-base" data-i="'+k+'">⭐ '+(bs?'Basis-Unterkunft':'Als Basis nutzen')+'</button>':'')+'<button class="btn sm2" data-a="pl-del" data-i="'+k+'" style="margin-left:auto">🗑️</button></div></div>'}
  return h+'</div>'}
-function sKo(s){let h='';const cs={};s.items.forEach(x=>{const g=x.g==='S'?'R':x.g;cs[g]=(cs[g]||0)+(+x.a||0)});
+function sKo(s){let h='';const cs={};s.items.forEach(x=>{const g=x.g==='S'?'R':x.g;cs[g]=(cs[g]||0)+(+x.a||0)});cs.A=(cs.A||0)+plCost(s);
  s.items.forEach((x,k)=>{h+='<div class="it"><select data-f="ig" data-i="'+k+'">'+GR.map(g=>'<option value="'+g[0]+'"'+(g[0]===x.g?' selected':'')+'>'+g[1].split(' ')[0]+'</option>').join('')+'</select><input type="text" data-f="it" data-i="'+k+'" value="'+esc(x.t)+'"><input type="number" data-f="ia" data-i="'+k+'" min="0" value="'+(+x.a||0)+'"><button class="x" data-a="it-del" data-i="'+k+'">×</button></div>'});
- h+='<button class="btn sm2" data-a="it-add">+ Posten</button><h3>Summe <span id="ks" style="margin-left:auto">'+eur(sum(s))+'</span></h3>';
+ if(plCost(s))h+='<p class="sm mut" style="margin:8px 0 0">💶 Enthält '+eur(plCost(s))+' Eintritte der Sehenswürdigkeiten (unter „Orte“, Button „Kosten“, pro Person × 2).</p>';h+='<button class="btn sm2" data-a="it-add">+ Posten</button><h3>Summe <span id="ks" style="margin-left:auto">'+eur(sum(s))+'</span></h3>';
  const tot=sum(s)||1;h+='<div class="bar">'+CATS.slice(0,4).map(c=>'<i style="width:'+(100*(cs[c[0]]||0)/tot)+'%;background:'+c[3]+'" title="'+c[2]+'"></i>').join('')+'</div><div class="legend">'+CATS.slice(0,4).map(c=>cs[c[0]]?'<div><i style="background:'+c[3]+'"></i>'+c[1]+' '+c[2]+'<span>'+eur(cs[c[0]])+'</span></div>':'').join('')+'</div><p class="mut sm">Alles Schätzungen für zwei Personen, einfach überschreiben.</p>';return h}
 function sNt(s){return'<label class="sm mut">Beschreibung und Notizen</label><textarea data-f="note" placeholder="Hotels, Ideen, Buchungsnummern …">'+esc(s.note)+'</textarea><label class="sm mut">🍜 Typisches Essen (ein Gericht pro Zeile)</label><textarea data-f="food">'+esc(s.food)+'</textarea><label class="sm mut">🌸 Kirschblüten-Spots (ein Ort pro Zeile)</label><textarea data-f="sp">'+esc(s.sp)+'</textarea><h3>🖼️ Bilder <span class="mut sm">(erscheinen beim Überfahren des Pins auf der Karte)</span></h3><div class="imgs">'+s.imgs.map((u,k)=>'<div style="background-image:url('+u+')"><b data-a="img-del" data-k="'+k+'">×</b></div>').join('')+'</div><label class="btn" style="margin-top:8px">+ Bilder hinzufügen<input type="file" id="fi" accept="image/*" multiple hidden></label>'}
 function vBudget(){const c=cats(),tot=grand()||1;let acc=0;
@@ -545,6 +547,7 @@ function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  case'hit-place':{const o=HITS[+d.k];if(!o)break;const ty=guessTy(o);addPlace(s,{ty,n:niceName(o),jp:origName(o)||undefined,t:'',ok:0,lat:Math.round(+o.lat*1e5)/1e5,lon:Math.round(+o.lon*1e5)/1e5,info:extractInfo(o)},true);toast('„'+niceName(o)+'“ hinzugefügt und auf der Karte gesetzt.');break}
  case'hit-manual':{const np={ty:'X',n:d.q,t:'',ok:0};addPlace(s,np);autoGeo(s,np);break}
  case'sug':{const g=(SUG[s.n]||[]).filter(g=>!s.pl.some(x=>x.n===g[1]))[+d.k];if(!g)break;const np={ty:g[0],n:g[1],t:'',ok:0};addPlace(s,np);autoGeo(s,np);break}
+ case'pl-cost':openCost[sel+':'+i]=!openCost[sel+':'+i];renderPanel();if(openCost[sel+':'+i]){const e=document.querySelector('#pbody .pc[data-i="'+i+'"] [data-f=pcost]');if(e)e.focus()}break
  case'pl-info':openInfo[sel+':'+i]=!openInfo[sel+':'+i];renderPanel();if(openInfo[sel+':'+i]){const e=document.querySelector('#pbody .pc[data-i="'+i+'"] .inote');if(e)e.focus()}break
  case'pl-vote':{const x=s.pl[i];if(!x||x.ty!=='S')break;x.vt=x.vt||{};x.vt[d.who]=!x.vt[d.who];save();renderPanel();break}
  case'pl-ok':s.pl[i].ok=s.pl[i].ok?0:1;save();render();break;
@@ -597,6 +600,7 @@ function field(t){const f=t.dataset.f,s=S.stops[sel],i=+t.dataset.i;if(f==='syau
  case'sn':s.n=t.value;saveSoon();drawMap();break;
  case'pn':s.pl[i].n=t.value;saveSoon();break;
  case'pt':s.pl[i].t=t.value;saveSoon();break;
+ case'pcost':{const v=Math.max(0,+t.value||0);s.pl[i].c=v||undefined;saveSoon();const e=t.closest('.costrow');if(e)e.querySelector('.ctot').textContent=eur(2*v);break}
  case'pnote':s.pl[i].nt=t.value;saveSoon();break;
  case'pty':s.pl[i].ty=t.value;save();render();break;
  case'it':s.items[i].t=t.value;saveSoon();break;
