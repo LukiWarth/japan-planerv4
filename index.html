@@ -203,6 +203,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-off
 .ph{display:flex;gap:6px;overflow-x:auto;margin-top:6px;padding-bottom:2px}
 .ph div{position:relative;flex:none}
 .ph img{height:68px;width:auto;max-width:130px;border-radius:9px;object-fit:cover;cursor:zoom-in;display:block;background:var(--soft);min-width:60px}
+.ph .tb{position:absolute;left:3px;top:3px;background:#000b;color:#fff;border-radius:99px;padding:1px 7px;font-size:.66rem;font-style:normal;font-weight:700}.ph .mv{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;gap:2px;padding:2px;background:linear-gradient(transparent,#0008);border-radius:0 0 9px 9px}.ph .mv i{font-style:normal;color:#fff;font-size:.8rem;min-width:24px;height:24px;display:grid;place-items:center;background:#0007;border-radius:7px;cursor:pointer}.ph .mv i.off{background:none}
 .ph b{position:absolute;top:2px;right:2px;background:#000a;color:#fff;border-radius:99px;width:20px;height:20px;display:grid;place-items:center;font-size:.8rem;cursor:pointer}
 #lb{position:fixed;inset:0;background:#000d;z-index:6000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px}
 #lb.on{display:flex}#lb img{max-width:96vw;max-height:80vh;border-radius:12px}#lb a{color:#fff;font-size:.85rem}
@@ -587,7 +588,8 @@ function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  case'sy-off':if(confirm('Verbindung trennen? Der Plan bleibt auf diesem Gerät, wird aber nicht mehr abgeglichen.')){SY=null;LS.set(SYK(),'null');renderPanel()}break
  case'pl-view':plView=d.v;LS.set('jp4-plv',plView);renderPanel();break
  case'lb':{const q=+d.pi<0?stopPhotos(+d.si)[+d.k]:phList(S.stops[+d.si].pl[+d.pi])[+d.k];showLb(q);break}
- case'ph-del':{const x=s.pl[i];x.imgs.splice(+d.k,1);save();renderPanel();break}
+ case'ph-del':{const x=s.pl[i],q=phList(x)[+d.k];if(!q)break;x.imgs=(x.imgs||[]).filter(a=>a!==q.u);if(x.ph)x.ph=x.ph.filter(a=>a.u!==q.u);save();render();break}
+ case'ph-mv':{const x=s.pl[i],l=phList(x),k=+d.k;if(!l[k])break;const q=l.splice(k,1)[0];if(d.d==='to0')l.unshift(q);else l.splice(Math.max(0,Math.min(l.length,k+(+d.d))),0,q);x.po=l.map(a=>uh(a.u));save();render();break}
  case'ph-find':{const x=s.pl[i];toast('Suche Fotos …');phPlace(s,x,true);break}
  case'img-del':s.imgs.splice(+d.k,1);save();render();break;
  case'shift':S.shift=+d.n;save();render();break;
@@ -735,8 +737,9 @@ $('pbody').addEventListener('pointerdown',e=>{
 $('dayx').onclick=()=>{actDay=null;drawMap();if($('pbody').querySelector('.day'))renderPanel()};
 
 /* ---------- Fotos ---------- */
-const phList=x=>(x.imgs||[]).map(u=>({u,own:1})).concat(x.ph||[]);
-function phStrip(s,k,x){const l=phList(x),own=(x.imgs||[]).length;let h='<div class="ph">'+l.map((q,j)=>'<div><img src="'+esc(q.u)+'" alt="" loading="lazy" data-a="lb" data-si="'+S.stops.indexOf(s)+'" data-pi="'+k+'" data-k="'+j+'">'+(q.own?'<b data-a="ph-del" data-i="'+k+'" data-k="'+j+'">×</b>':'')+'</div>').join('')+'</div>';
+const uh=u=>{let h=5381;for(let i=0;i<u.length;i++)h=((h<<5)+h+u.charCodeAt(i))|0;return(h>>>0).toString(36)+u.length};
+const phList=x=>{const l=(x.imgs||[]).map(u=>({u,own:1})).concat(x.ph||[]);if(!x.po||!x.po.length)return l;const o=x.po,pos=q=>{const i=o.indexOf(uh(q.u));return i<0?1e6:i};return l.map((q,i)=>[q,i]).sort((a,b)=>(pos(a[0])-pos(b[0]))||(a[1]-b[1])).map(a=>a[0])};
+function phStrip(s,k,x){const l=phList(x),own=(x.imgs||[]).length;let h='<div class="ph">'+l.map((q,j)=>'<div><img src="'+esc(q.u)+'" alt="" loading="lazy" data-a="lb" data-si="'+S.stops.indexOf(s)+'" data-pi="'+k+'" data-k="'+j+'">'+(j===0?'<em class="tb">⭐ Titelbild</em>':'')+'<b data-a="ph-del" data-i="'+k+'" data-k="'+j+'" title="Foto entfernen">×</b>'+(l.length>1?'<span class="mv">'+(j>0?'<i data-a="ph-mv" data-i="'+k+'" data-k="'+j+'" data-d="-1" title="Nach vorn">◀</i>':'<i class="off"></i>')+(j>0?'<i data-a="ph-mv" data-i="'+k+'" data-k="'+j+'" data-d="to0" title="Als Titelbild">⭐</i>':'')+(j<l.length-1?'<i data-a="ph-mv" data-i="'+k+'" data-k="'+j+'" data-d="1" title="Nach hinten">▶</i>':'<i class="off"></i>')+'</span>':'')+'</div>').join('')+'</div>'+(l.length>1?'<div class="mut sm">◀ ▶ verschiebt ein Foto, ⭐ macht es zum Titelbild. Das erste Foto ist das Titelbild.</div>':'');
  h+='<div class="row"><label class="btn sm2">📷 Eigenes Foto<input type="file" accept="image/*" multiple hidden data-f="pfile" data-i="'+k+'"></label>'+(x.lat!=null?'<button class="btn sm2" data-a="ph-find" data-i="'+k+'">🔄 Fotos suchen</button>':'')+'</div>'+((x.ph&&x.ph.length)?'<div class="mut sm">Fotos: Wikipedia/Wikimedia Commons (frei lizenziert). Bei Restaurants und Hotels sind es oft Bilder aus der Umgebung. Antippen vergrößert und zeigt die Quelle.</div>':(x.phTried&&!l.length?'<div class="mut sm">Keine passenden Fotos gefunden. Fügt gern ein eigenes hinzu.</div>':''));return h}
 function showLb(q){if(!q)return;$('lb').querySelector('img').src=q.u;const a=$('lbs');a.href=q.p||q.u;a.textContent=q.own?'':'Quelle: '+(q.t==='wiki'?'Wikipedia':'Wikimedia Commons');$('lb').classList.add('on')}
 $('lb').onclick=e=>{if(e.target.tagName!=='A')$('lb').classList.remove('on')};
