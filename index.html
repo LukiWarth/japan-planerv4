@@ -51,7 +51,8 @@ a{color:var(--acc)}
 #mc{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px;z-index:500}
 #mc button{width:40px;height:40px;border-radius:12px;border:0;background:var(--card);box-shadow:var(--sh);font-size:1.1rem;display:grid;place-items:center}
 #mc button.on{background:var(--acc);color:#fff}
-#rstat{position:absolute;left:10px;top:10px;z-index:500;max-width:calc(100% - 70px);background:var(--card);box-shadow:var(--sh);border-radius:10px;padding:5px 10px;font-size:.76rem;color:var(--mut)}
+#zbar{position:absolute;left:10px;right:60px;top:10px;z-index:500;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}#zbar::-webkit-scrollbar{display:none}#zbar button{flex:none;border:2px solid #fff;color:#fff;font-weight:700;font-size:.78rem;padding:6px 11px;border-radius:99px;box-shadow:var(--sh);text-shadow:0 1px 2px #0005;white-space:nowrap}#zbar button.on{outline:3px solid #23284a;outline-offset:1px}
+#rstat{position:absolute;left:10px;top:52px;z-index:500;max-width:calc(100% - 70px);background:var(--card);box-shadow:var(--sh);border-radius:10px;padding:5px 10px;font-size:.76rem;color:var(--mut)}
 #rstat:empty{display:none}
 .mkw{background:none;border:0}
 .mk{position:relative;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--c);border:3px solid #fff;box-shadow:0 2px 8px #0006;font-size:18px;transition:transform .15s}
@@ -164,7 +165,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-off
 .tlr .t .v{background:#2b3a67;top:7px;bottom:7px;border-radius:5px}
 .axis{display:grid;grid-template-columns:92px 1fr;font-size:.7rem;color:var(--mut)}
 .axis div{position:relative;height:16px}.axis span{position:absolute;transform:translateX(-50%)}
-#dayfl{position:absolute;left:50%;top:52px;transform:translateX(-50%);z-index:500;background:#8a3fc7;color:#fff;border-radius:99px;padding:6px 6px 6px 14px;font-size:.82rem;font-weight:700;box-shadow:var(--sh);display:none;align-items:center;gap:8px;max-width:calc(100% - 140px)}
+#dayfl{position:absolute;left:50%;top:94px;transform:translateX(-50%);z-index:500;background:#8a3fc7;color:#fff;border-radius:99px;padding:6px 6px 6px 14px;font-size:.82rem;font-weight:700;box-shadow:var(--sh);display:none;align-items:center;gap:8px;max-width:calc(100% - 140px)}
 #dayfl.on{display:flex}#dayfl button{border:0;background:#fff3;color:#fff;border-radius:99px;width:26px;height:26px;flex:none}
 .cn{width:20px;height:20px;border-radius:50%;background:#8a3fc7;color:#fff;font:800 12px system-ui;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 1px 4px #0006}
 .mg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
@@ -258,7 +259,7 @@ textarea.auto-ta{display:block;width:100%;resize:none;overflow:hidden;border-rad
 <body>
 <header id="top"><div id="brand">🌸 <span>Japan <i>2027</i></span></div><div id="vs"></div></header>
 <div id="app">
- <section id="mapwrap"><div id="lmap"></div><div id="rstat"></div><div id="dayfl"><span id="dayt"></span><button id="dayx" title="Tagesroute ausblenden">✕</button></div>
+ <section id="mapwrap"><div id="lmap"></div><div id="zbar"></div><div id="rstat"></div><div id="dayfl"><span id="dayt"></span><button id="dayx" title="Tagesroute ausblenden">✕</button></div>
   <div id="mc"><button id="zi" title="Vergrößern">＋</button><button id="zo" title="Verkleinern">−</button><button id="zr" title="Ganze Reise zeigen">⟲</button><button id="zs" title="Satellit ein/aus">🛰️</button><button id="zd" title="Straßenrouten ein/aus">🛣️</button><button id="zg" title="Präfektur-Grenzen ein/aus">🗾</button><button id="zfd" title="Restaurants, Cafés und Bars aus-/einblenden">🍜</button><button id="zf" title="Karte filtern">🔍</button><button id="zl" title="Mein Standort">📡</button></div><div id="mfp"></div></section>
  <aside id="panel"><div id="handle"><i></i></div><div id="pbody"></div>
   <nav id="bn"><button data-v="home"><b>🏠</b>Start</button><button data-v="route"><b>🗺️</b>Reise</button><button data-v="cal"><b>📅</b>Tag</button><button data-v="budget"><b>💶</b>Budget</button><button data-v="bloom"><b>🌸</b>Blüte</button><button data-v="more"><b>⚙️</b>Mehr</button></nav></aside>
@@ -524,7 +525,8 @@ function sheet(n){SH=n;if(!mobile()){$('panel').style.height='';return}const H=$
  h.onpointerup=end;h.onpointercancel=end})();
 window.addEventListener('resize',()=>{sheet(SH)});
 /* ---------- Panel ---------- */
-function render(){if(view!=='cal'){actDay=null;tlDay=null}renderTop();renderPanel();drawMap()}
+function renderZbar(){const b=$('zbar');if(!b)return;b.innerHTML=S.stops.map((s,i)=>'<button data-a="zgo" data-i="'+i+'" class="'+(openS&&i===sel?'on':'')+'" style="background:'+tg0(s)[2]+'">'+esc(s.n)+'</button>').join('')}
+function render(){if(view!=='cal'){actDay=null;tlDay=null}renderTop();renderPanel();renderZbar();drawMap()}
 const fitTA=e=>{e.style.height='auto';e.style.height=(e.scrollHeight+2)+'px'};
 function renderPanel(){if(view==='cal'&&calMode==='day')ensureDay();else if(view!=='cal'&&view!=='home'&&0){}const b=$('pbody'),st=b.scrollTop;b.innerHTML=view==='home'?vHome():view==='cal'?(cmpOpen?vCmp():calMode==='day'?vDay():vCal()):view==='budget'?vBudget():view==='bloom'?vBloom():view==='more'?vMore():(openS&&S.stops[sel]?vStop():vRoute());b.querySelectorAll('.auto-ta').forEach(fitTA);b.scrollTop=st}
 function heroImg(s){return(s.imgs&&s.imgs[0])||(s.ph&&s.ph[0]&&s.ph[0].u)||''}
@@ -639,6 +641,7 @@ function addPlace(s,np,fly){if(np.kw==null&&np.ty!=='H'){const k=kwFor(np.n);if(
 function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  switch(a){
  case'open':openStop(i);break;
+ case'zgo':{const i=+d.i;if(S.stops[i])openStop(i);break}
  case'back':openS=false;render();break;
  case'addknown':{const n=d.n,A=ST[n];addStop(n,A[0],A[1],A[3]);const x=S.stops[sel];x.note=A[2];x.items[0].a=2*A[4];x.items[0].t='Doppelzimmer, 2 Nächte à '+A[4]+' €';x.items[1].a=4*A[5];x.items[2].a=A[6];x.items[3].a=A[7];save();render();break}
  case'sgo':doSearch('stop',$('sq').value,'sres');break;
@@ -709,6 +712,7 @@ function act(a,el){const s=S.stops[sel],i=+el.dataset.i,d=el.dataset;
  case'export':{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({rg:RG,s:S})],{type:'application/json'}));a.download='japan-plan.json';a.click();break}
  case'reset':if(confirm('Diese Variante auf den Vorschlag zurücksetzen? Eure Änderungen gehen verloren.')){S=mk(RG);sel=-1;openS=false;save();render();fitAll()}break;
  }}
+$('zbar').onclick=e=>{const b=e.target.closest('[data-a]');if(b)act(b.dataset.a,b)};
 $('pbody').onclick=e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;if(e.target.tagName==='A')return;act(b.dataset.a,b)};
 function field(t){const f=t.dataset.f,s=S.stops[sel],i=+t.dataset.i;if(f==='syauto'){if(SY){SY.auto=t.checked;sySave()}return}
  if(/^p/.test(f)&&s&&s.pl[i]&&s.pl[i].nw){delete s.pl[i].nw;drawMap()}
