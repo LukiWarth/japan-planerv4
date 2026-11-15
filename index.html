@@ -965,10 +965,11 @@ function vDay(){if(!S.stops.length)return'<h2>Tag</h2><p class="mut">Noch keine 
  h+=dayCard(c.si,c.day)+'<div class="row" style="justify-content:space-between;margin:6px 0 14px">'+(pv?'<button class="btn" data-a="day-go" data-si="'+pv.si+'" data-day="'+pv.day+'">◀ '+dstr(pv.n)+'</button>':'<span></span>')+(nx?'<button class="btn" data-a="day-go" data-si="'+nx.si+'" data-day="'+nx.day+'">'+dstr(nx.n)+' ▶</button>':'')+'</div>';return h}
 /* Filter */
 let HID={},ONLYDAY=false;try{const f=JSON.parse(LS.get('jp4-flt','{}'));HID=f.h||{};ONLYDAY=!!f.o}catch(e){}
-const FOODT=['R','C','B','F'],foodHidden=()=>FOODT.every(t=>HID[t]);
+const FOODT=['R','C','F'],foodHidden=()=>FOODT.every(t=>HID[t]);
 function toggleFood(){const h=!foodHidden();FOODT.forEach(t=>{if(h)HID[t]=true;else delete HID[t]});saveFlt();syncFood();toast(h?'Restaurants, Cafés und Bars ausgeblendet.':'Restaurants, Cafés und Bars wieder eingeblendet.');if(typeof renderFlt==='function')renderFlt();drawMap();renderPanel()}
 function syncFood(){const b=$('zfd');if(b){b.className=foodHidden()?'on':'';b.title=foodHidden()?'Restaurants, Cafés und Bars einblenden':'Restaurants, Cafés und Bars ausblenden'}}
 const saveFlt=()=>LS.set('jp4-flt',JSON.stringify({h:HID,o:ONLYDAY}));
+if(!LS.get('jp4-fh1','')){FOODT.forEach(t=>HID[t]=true);delete HID.B;saveFlt();LS.set('jp4-fh1','1')}
 function renderFlt(){const cnt={};S.stops.forEach(s=>s.pl.forEach(x=>{if(x.lat!=null)cnt[x.ty]=(cnt[x.ty]||0)+1}));let h='<b style="font-size:.85rem">Auf der Karte zeigen</b><div class="chips" style="margin-top:6px">'+PT.map(t=>cnt[t[0]]?'<button class="fchip'+(HID[t[0]]?'':' on')+'" data-t="'+t[0]+'">'+t[1]+' '+t[2]+' <small>'+cnt[t[0]]+'</small></button>':'').join('')+'</div>';
  h+='<label class="row sm" style="margin-top:8px"><input type="checkbox" id="fod"'+(ONLYDAY?' checked':'')+' style="width:auto"> Nur Orte des gewählten Tages</label><div class="row" style="margin-top:6px"><button class="btn sm2" id="fall">Alle zeigen</button></div>';$('mfp').innerHTML=h;$('zf').classList.toggle('on',Object.keys(HID).some(k=>HID[k])||ONLYDAY)}
 $('zf').onclick=()=>{renderFlt();$('mfp').classList.toggle('on')};
