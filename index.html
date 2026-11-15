@@ -184,7 +184,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-off
 .dc.lift{opacity:.4}.dc.ovc{box-shadow:0 -3px 0 #8a3fc7}
 .dr{display:flex;align-items:center;gap:8px}
 .dh{touch-action:none;cursor:grab;font-size:1.2rem;padding:4px 6px;color:var(--mut);user-select:none}
-.dn{background:#8a3fc7;color:#fff;border-radius:50%;width:20px;height:20px;display:grid;place-items:center;font-size:.72rem;font-weight:800;flex:none}
+.dnn{background:#8a3fc7;color:#fff;border-radius:50%;width:20px;height:20px;display:grid;place-items:center;font-size:.72rem;font-weight:800;flex:none}
 .dt{flex:1;min-width:0;cursor:pointer;font-weight:600;font-size:.9rem}
 .ce{display:flex;gap:6px;margin-top:6px}.ce input,.ce select{flex:1;padding:5px 8px}
 .dsum{margin-top:8px}
@@ -824,7 +824,7 @@ function tlHtml(si,day){const s=S.stops[si],r=tlRange(si,day),H=(r[1]-r[0])/60*P
   h+='<div class="tb'+(tg?' tight':'')+'" data-si="'+si+'" data-pi="'+k+'" style="top:'+py(m)+'px;height:'+Math.max(18,du/60*PXH-2)+'px;left:'+(73*pos[k]/nc)+'%;width:'+(73/nc-1)+'%;background:'+t+'"><span class="tbt">'+t2s(m)+'–'+t2s(m+du)+' '+PI(x.ty)+' '+esc(x.n)+'</span>'+(tg&&du>=45?'<small>⚠️ Weg ca. '+tg.mn+' Min., Pause nur '+Math.max(0,tg.gap)+' Min.</small>':'')+'<b class="tbx" data-a="tl-un" data-si="'+si+'" data-pi="'+k+'" title="Aus der Zeitachse nehmen">×</b><i class="tbh"></i></div>'});
  return h+'</div></div><p class="mut sm" style="margin:4px 0 0">Orte aus der Liste (oder am Rechner direkt von der Karte) auf die Zeitachse ziehen. Block ziehen = verschieben, unteren Rand ziehen = Dauer. Die blau gestreiften Blöcke rechts sind die geschätzte Reisezeit zwischen den Orten. Gelber Rand: Weg ist länger als die Pause.</p>'}
 function chipHtml(si,k,n,ed){const s=S.stops[si],x=s.pl[k],o=ed===si+':'+k;
- let h='<div class="dc" data-si="'+si+'" data-pi="'+k+'"><div class="dr"><span class="dh" title="Ziehen">⠿</span>'+(n?'<span class="dn">'+n+'</span>':'')+'<span class="dt" data-a="cal-ed" data-si="'+si+'" data-pi="'+k+'">'+PI(x.ty)+' '+esc(x.n)+voteTag(x)+(x.tm?' <small>'+esc(x.tm)+(x.dur?' · '+x.dur+' Min.':'')+'</small>':'')+(x.lat==null?' <small title="Keine Position">❔</small>':'')+'</span></div>';
+ let h='<div class="dc" data-si="'+si+'" data-pi="'+k+'"><div class="dr"><span class="dh" title="Ziehen">⠿</span>'+(n?'<span class="dnn">'+n+'</span>':'')+'<span class="dt" data-a="cal-ed" data-si="'+si+'" data-pi="'+k+'">'+PI(x.ty)+' '+esc(x.n)+voteTag(x)+(x.tm?' <small>'+esc(x.tm)+(x.dur?' · '+x.dur+' Min.':'')+'</small>':'')+(x.lat==null?' <small title="Keine Position">❔</small>':'')+'</span></div>';
  if(o){const nn=nd(s),v0=visit(si)[0];h+='<div class="ce"><label>Von<input type="time" data-f="ctm" data-si="'+si+'" data-i="'+k+'" value="'+esc(x.tm||'')+'"></label><label>Bis<input type="time" data-f="cte" data-si="'+si+'" data-i="'+k+'" value="'+(s2t(x.tm)!==null?t2s(Math.min(1439,s2t(x.tm)+(x.dur||60))):'')+'"></label><select data-f="cday" data-si="'+si+'" data-i="'+k+'"><option value="">kein Tag</option>'+Array.from({length:nn},(_,d)=>'<option value="'+d+'"'+(dayOf(s,x)===d?' selected':'')+'>'+dstr(v0+d)+'</option>').join('')+'</select><button class="btn sm2" data-a="pl-open" data-si="'+si+'" data-pi="'+k+'">✏️</button></div>'}
  return h+'</div>'}
 function dayCard(si,day,hl){const s=S.stops[si],v0=visit(si)[0],items=dayItems(si,day),c=chainPts(si,day),st=chainStat(c.pts),on=actDay&&actDay.si===si&&actDay.day===day,tl=tlDay&&tlDay.si===si&&tlDay.day===day;
