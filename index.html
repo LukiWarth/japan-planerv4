@@ -1005,11 +1005,11 @@ function impCard(){const T=S.imp||(S.imp=[]);let h='<div class="card"><div class
 
 let bwOpen=LS.get('jp4-bw','0')==='1';
 let bwS={};try{bwS=JSON.parse(LS.get('jp4-bws','{}'))||{}}catch(e){}
-function bwCard(){const L=[];S.stops.forEach((st,si)=>(st.pl||[]).forEach((x,pi)=>{if(!hasP(x))return;const c=vn(x,'c'),l=vn(x,'l');if(Math.max(c||0,l||0)<85)return;L.push({st,si,x,pi,c,l,a:vavg(x)||0,rt:+x.rt||0})}));
+function bwCard(){const L=[];S.stops.forEach((st,si)=>(st.pl||[]).forEach((x,pi)=>{if(!hasP(x))return;const c=vn(x,'c'),l=vn(x,'l');if(Math.max(c||0,l||0)<85||(c&&c<85)||(l&&l<85))return;L.push({st,si,x,pi,c,l,a:vavg(x)||0,rt:+x.rt||0})}));
  const row=r=>'<button class="vb" data-a="pl-open" data-si="'+r.si+'" data-pi="'+r.pi+'" style="display:flex;width:100%;justify-content:space-between;align-items:center;gap:8px;text-align:left;margin:3px 0"><b style="min-width:0">'+PI(r.x.ty)+' '+esc(r.x.n)+'</b><span class="sm" style="white-space:nowrap">'+(r.c?thumb(r.c)+'C ':'')+(r.l?thumb(r.l)+'L ':'')+(r.rt?'⭐ '+r.rt:'')+'</span></button>';
  let h='<div class="card"><div class="row tdh" data-a="bw-toggle" role="button" tabindex="0" aria-expanded="'+(bwOpen?'true':'false')+'" style="justify-content:space-between;cursor:pointer"><b>⭐ Bewertung</b><span class="sm mut">'+(L.length?L.length+' Favoriten':'noch leer')+' <span style="font-size:1.1rem">'+(bwOpen?'▴':'▾')+'</span></span></div>';
- if(bwOpen){if(!L.length)h+='<p class="mut sm" style="margin:8px 0 0">Noch keine Favoriten. Hier landen Orte, die jemand von euch mit ❤️ oder 👍 bewertet hat.</p>';
-  else{h+='<div class="sm mut" style="margin:6px 0">Nur Orte mit ❤️ oder 👍 von Carmen oder Lukas, je Ziel sortiert nach Ø. Tippen öffnet den Ort.</div>';
+ if(bwOpen){if(!L.length)h+='<p class="mut sm" style="margin:8px 0 0">Noch keine Favoriten. Hier landen Orte, die nur ❤️ oder 👍 bekommen haben.</p>';
+  else{h+='<div class="sm mut" style="margin:6px 0">Nur Orte, bei denen alle abgegebenen Stimmen ❤️ oder 👍 sind (kein 🤷‍♂️ oder 👎), je Ziel sortiert nach Ø. Tippen öffnet den Ort.</div>';
    S.stops.forEach((st,si)=>{const R=L.filter(r=>r.si===si).sort((p,q)=>(q.a-p.a)||(q.rt-p.rt));if(!R.length)return;const op=!!bwS[st.id||si];h+='<div class="row tdh" data-a="bw-stop" data-k="'+esc(String(st.id||si))+'" role="button" tabindex="0" aria-expanded="'+(op?'true':'false')+'" style="justify-content:space-between;cursor:pointer;margin-top:8px;padding:6px 0;border-top:1px solid var(--line,#0002)"><b>📍 '+esc(st.n)+'</b><span class="sm mut">'+R.length+' ❤️👍 '+(op?'▴':'▾')+'</span></div>'+(op?R.map(row).join(''):'')})}}
  return h+'</div>'}
 /* Reiseunterlage */
